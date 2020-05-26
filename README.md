@@ -1,8 +1,8 @@
-# College Board SAT Auto Refresh
+# College Board SAT Semi-Auto Registration
 
 Function
 ---
-automatically refresh College Board SAT registration page periodically if there is no registration date available or the server is down.
+automatically complete several steps of College Board SAT registration and refresh the page periodically if there is no registration date available or the server is down.
 
 Usage
 ---
