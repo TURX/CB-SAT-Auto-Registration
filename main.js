@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX
-// @version      1.1
+// @version      1.2
 // @description  automatically complete several steps of SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/satweb/*
@@ -47,6 +47,7 @@
         case "https://nsat.collegeboard.org/satweb/satHomeAction.action":
             console.log("[College Board SAT Semi-Auto Registration] Start to register.");
             $("#actionRegisterAnother").click();
+            $("#useBookmarkProceed").click();
             break;
         case "https://nsat.collegeboard.org/satweb/processMySatAction.action":
             console.log("[College Board SAT Semi-Auto Registration] Go to the next step.");
