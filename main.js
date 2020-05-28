@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX
-// @version      1.2
+// @version      1.3
 // @description  automatically complete several steps of SAT registration
 // @author       TURX
-// @match        https://nsat.collegeboard.org/satweb/*
+// @match        https://nsat.collegeboard.org/*
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
@@ -20,27 +20,27 @@
             var timeOutReload;
             if (document.getElementsByClassName("s2-well-text-block").length != 0) {
                 if (document.getElementsByClassName("s2-well-text-block")[0].innerText.search("There are no available registration dates for the current test year. Please check back later to register for future tests.") != -1) {
-                    console.log("[College Board SAT Semi-Auto Registration] No registration date available, will refresh in 30s.");
+                    console.log("[College Board SAT Semi-Auto Registration] No registration date available, will retry in 30s.");
                     timeOutReload = 30;
-                    document.getElementsByClassName("s2-well-text-block")[0].innerText = "[College Board SAT Semi-Auto Registration] No registration date available, will refresh after 30s."
+                    document.getElementsByClassName("s2-well-text-block")[0].innerText = "No registration date available, will retry after 30s."
                     setInterval(function() {
                         if (timeOutReload == 0) location.reload();
                         else timeOutReload--;
-                        document.getElementsByClassName("s2-well-text-block")[0].innerText = "[College Board SAT Semi-Auto Registration] No registration date available, will refresh after " + timeOutReload + "s."
+                        document.getElementsByClassName("s2-well-text-block")[0].innerText = "No registration date available, will retry after " + timeOutReload + "s."
                     }, 1000);
                 } else {
                     console.log("[College Board SAT Semi-Auto Registration] Available, be quick.");
                     alert("[College Board SAT Semi-Auto Registration] Available now.");
                 }
             } else {
-                console.log("[College Board SAT Semi-Auto Registration] Website error, will refresh in 3s.");
+                console.log("[College Board SAT Semi-Auto Registration] Website error, will retry in 3s.");
                 document.write("<div id='error'>[College Board SAT Semi-Auto Registration] Website error.</div>");
                 timeOutReload = 3;
-                document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will refresh after 3s."
+                document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after 3s."
                 setInterval(function() {
                     if (timeOutReload == 0) location.reload();
                     else timeOutReload--;
-                    document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will refresh after " + timeOutReload + "s."
+                    document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after " + timeOutReload + "s."
                 }, 1000);
             }
             break;
@@ -67,5 +67,14 @@
             $("#agreeTerms").prop("checked", true);
             $("#continue").click();
             break;
+        case "https://nsat.collegeboard.org/errors/down.html":
+            console.log("[College Board SAT Semi-Auto Registration] Website down, will retry in 30s.");
+            timeOutReload = 30;
+            document.getElementsByClassName("cb-alert-heading")[0].getElementsByTagName("p")[0].innerText = "Website down, will retry after 30s."
+            setInterval(function() {
+                if (timeOutReload == 0) location.href = "https://nsat.collegeboard.org/satweb/satHomeAction.action";
+                else timeOutReload--;
+                document.getElementsByClassName("cb-alert-heading")[0].getElementsByTagName("p")[0].innerText = "Website down, will retry after " + timeOutReload + "s."
+            }, 1000);
     }
 })();
