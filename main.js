@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX
-// @version      1.5
+// @version      1.6
 // @description  automatically complete several steps of SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -40,22 +40,27 @@
                     alert("[College Board SAT Semi-Auto Registration] Available now.");
                 }
             } else {
-                if (document.body.innerText.search("unavailable") != -1) {
-                    console.log("[College Board SAT Semi-Auto Registration] Website error, will retry in 3s.");
-                    document.write("<div id='error'>[College Board SAT Semi-Auto Registration] Website error.</div>");
-                    timeOutReload = 3;
-                    document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after 3s."
-                    setInterval(function() {
-                        if (timeOutReload == 0) {
-                            if (reloaded == false) {
-                                console.log("[College Board SAT Semi-Auto Registration] Retry now.");
-                                location.reload();
-                                reloaded = true;
+                if (document.getElementsByTagName("h1").length != 0) {
+                    if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object") {
+                        console.log("[College Board SAT Semi-Auto Registration] Website error, will retry in 3s.");
+                        document.write("<div id='error'>[College Board SAT Semi-Auto Registration] Website error.</div>");
+                        timeOutReload = 3;
+                        document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after 3s."
+                        setInterval(function() {
+                            if (timeOutReload == 0) {
+                                if (reloaded == false) {
+                                    console.log("[College Board SAT Semi-Auto Registration] Retry now.");
+                                    location.reload();
+                                    reloaded = true;
+                                }
                             }
-                        }
-                        else timeOutReload--;
-                        document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after " + timeOutReload + "s."
-                    }, 1000);
+                            else timeOutReload--;
+                            document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after " + timeOutReload + "s."
+                        }, 1000);
+                    } else {
+                        console.log("[College Board SAT Semi-Auto Registration] Available, be quick.");
+                        alert("[College Board SAT Semi-Auto Registration] Available now.");
+                    }
                 } else {
                     console.log("[College Board SAT Semi-Auto Registration] Available, be quick.");
                     alert("[College Board SAT Semi-Auto Registration] Available now.");
