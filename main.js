@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX
-// @version      1.6
+// @version      1.7
 // @description  automatically complete several steps of SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -16,6 +16,26 @@
     var timeOutReload;
     var reloaded = false;
     console.log("[College Board SAT Semi-Auto Registration] Enabled, current URL: " + url);
+
+    if (document.getElementsByTagName("h1").length != 0 && url != "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action") {
+        if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object" || document.getElementsByTagName("h1")[0].innerText == "Access Denied") {
+            console.log("[College Board SAT Semi-Auto Registration] Website error, will retry in 3s.");
+            document.write("<div id='error'>[College Board SAT Semi-Auto Registration] Website error.</div>");
+            timeOutReload = 3;
+            document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after 3s."
+            setInterval(function() {
+                if (timeOutReload == 0) {
+                    if (reloaded == false) {
+                        console.log("[College Board SAT Semi-Auto Registration] Retry now.");
+                        location.reload();
+                        reloaded = true;
+                    }
+                }
+                else timeOutReload--;
+                document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after " + timeOutReload + "s."
+            }, 1000);
+        }
+    }
 
     switch (url) {
         case "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action":
@@ -41,7 +61,7 @@
                 }
             } else {
                 if (document.getElementsByTagName("h1").length != 0) {
-                    if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object") {
+                    if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object"  || document.getElementsByTagName("h1")[0].innerText == "Access Denied") {
                         console.log("[College Board SAT Semi-Auto Registration] Website error, will retry in 3s.");
                         document.write("<div id='error'>[College Board SAT Semi-Auto Registration] Website error.</div>");
                         timeOutReload = 3;
