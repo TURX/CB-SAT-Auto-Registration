@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX
-// @version      1.9
+// @version      1.10
 // @description  automatically complete several steps of SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -15,10 +15,12 @@
     var url = window.location.href.substr(0, window.location.href.length - window.location.search.length);
     var timeOutReload;
     var reloaded = false;
+    var error = false;
     console.log("[College Board SAT Semi-Auto Registration] Enabled, current URL: " + url);
 
     if (document.getElementsByTagName("h1").length != 0 && url != "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action") {
         if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object" || document.getElementsByTagName("h1")[0].innerText == "Access Denied") {
+            error = true;
             console.log("[College Board SAT Semi-Auto Registration] Website error, will retry in 3s.");
             document.write("<div id='error'>[College Board SAT Semi-Auto Registration] Website error.</div>");
             timeOutReload = 3;
@@ -37,7 +39,7 @@
         }
     }
 
-    switch (url) {
+    if (!error) switch (url) {
         case "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action":
             if (document.getElementsByClassName("s2-well-text-block").length != 0) {
                 if (document.getElementsByClassName("s2-well-text-block")[0].innerText.search("There are no available registration dates for the current test year. Please check back later to register for future tests.") != -1) {
@@ -91,11 +93,11 @@
             if (document.getElementById("testCenterSearchResults_wrapper") != null) {
                 if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") == -1) {
                     if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("My Ideal Test Center") == -1) {
-                        console.log("[College Board SAT Semi-Auto Registration] No seat available in this region, will retry in 30s.");
+                        console.log("[College Board SAT Semi-Auto Registration] No seat available in this region, will retry in 15s.");
                         document.getElementById("sortLinks").remove();
                         document.getElementById("availabilityFilter").remove();
-                        timeOutReload = 30;
-                        document.getElementById("testCenterSearchResults_wrapper").innerText = "No seat available in this region, will retry after 30s."
+                        timeOutReload = 15;
+                        document.getElementById("testCenterSearchResults_wrapper").innerText = "No seat available in this region, will retry after 15s."
                         setInterval(function() {
                             if (timeOutReload == 0) {
                                 if (reloaded == false) {
