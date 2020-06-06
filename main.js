@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX
-// @version      1.11
+// @version      1.12
 // @description  automatically complete several steps of SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -30,7 +30,10 @@ function countdown(timeOutReload, element, desc, url) {
 function notify(content) {
     console.log("[College Board SAT Semi-Auto Registration] " + content);
     new Notification(content, {body: "College Board SAT Semi-Auto Registration Notification"});
-    alert(content);
+    document.getElementsByClassName("s2-page-title")[0].innerText = content;
+    setTimeout(function() {
+        alert(content);
+    }, 500);
 }
 
 function requestPermission() {
