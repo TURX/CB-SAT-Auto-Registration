@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX
-// @version      1.10
+// @version      1.11
 // @description  automatically complete several steps of SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -9,33 +9,51 @@
 // @run-at       document-idle
 // ==/UserScript==
 
+function countdown(timeOutReload, element, desc, url) {
+    var reloaded = false;
+    console.log("[College Board SAT Semi-Auto Registration] " + desc + ", will retry in 3s.");
+    element.innerText = desc + ", will retry after 3s.";
+    setInterval(function() {
+        if (timeOutReload == 0) {
+            if (reloaded == false) {
+                console.log("[College Board SAT Semi-Auto Registration] Retry now.");
+                if (url == undefined) location.reload();
+                else location.href = url;
+                reloaded = true;
+            }
+        }
+        else timeOutReload--;
+        element.innerText = desc + ", will retry after " + timeOutReload + "s."
+    }, 1000);
+}
+
+function notify(content) {
+    console.log("[College Board SAT Semi-Auto Registration] " + content);
+    new Notification(content, {body: "College Board SAT Semi-Auto Registration Notification"});
+    alert(content);
+}
+
+function requestPermission() {
+    while (Notification.permission != "granted") {
+        Notification.requestPermission();
+        alert("Please grant the notification permission to use College Board SAT Semi-Auto Registration.");
+    }
+}
+
 (function() {
     'use strict';
 
     var url = window.location.href.substr(0, window.location.href.length - window.location.search.length);
-    var timeOutReload;
-    var reloaded = false;
     var error = false;
     console.log("[College Board SAT Semi-Auto Registration] Enabled, current URL: " + url);
+
+    requestPermission();
 
     if (document.getElementsByTagName("h1").length != 0 && url != "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action") {
         if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object" || document.getElementsByTagName("h1")[0].innerText == "Access Denied") {
             error = true;
-            console.log("[College Board SAT Semi-Auto Registration] Website error, will retry in 3s.");
             document.write("<div id='error'>[College Board SAT Semi-Auto Registration] Website error.</div>");
-            timeOutReload = 3;
-            document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after 3s."
-            setInterval(function() {
-                if (timeOutReload == 0) {
-                    if (reloaded == false) {
-                        console.log("[College Board SAT Semi-Auto Registration] Retry now.");
-                        location.reload();
-                        reloaded = true;
-                    }
-                }
-                else timeOutReload--;
-                document.getElementById("error").innerText = "[College Board SAT Semi-Auto Registration] Website error, will retry after " + timeOutReload + "s."
-            }, 1000);
+            countdown(3, document.getElementById("error"), "Website error");
         }
     }
 
@@ -43,23 +61,9 @@
         case "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action":
             if (document.getElementsByClassName("s2-well-text-block").length != 0) {
                 if (document.getElementsByClassName("s2-well-text-block")[0].innerText.search("There are no available registration dates for the current test year. Please check back later to register for future tests.") != -1) {
-                    console.log("[College Board SAT Semi-Auto Registration] No registration date available, will retry in 30s.");
-                    timeOutReload = 30;
-                    document.getElementsByClassName("s2-well-text-block")[0].innerText = "No registration date available, will retry after 30s."
-                    setInterval(function() {
-                        if (timeOutReload == 0) {
-                            if (reloaded == false) {
-                                console.log("[College Board SAT Semi-Auto Registration] Retry now.");
-                                location.reload();
-                                reloaded = true;
-                            }
-                        }
-                        else timeOutReload--;
-                        document.getElementsByClassName("s2-well-text-block")[0].innerText = "No registration date available, will retry after " + timeOutReload + "s."
-                    }, 1000);
+                    countdown(30, document.getElementsByClassName("s2-well-text-block")[0], "No registration date available")
                 } else {
-                    console.log("[College Board SAT Semi-Auto Registration] Registration date available.");
-                    alert("[College Board SAT Semi-Auto Registration] Registration date available.");
+                    notify("Registration date available.");
                 }
             }
             break;
@@ -93,22 +97,9 @@
             if (document.getElementById("testCenterSearchResults_wrapper") != null) {
                 if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") == -1) {
                     if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("My Ideal Test Center") == -1) {
-                        console.log("[College Board SAT Semi-Auto Registration] No seat available in this region, will retry in 15s.");
                         document.getElementById("sortLinks").remove();
                         document.getElementById("availabilityFilter").remove();
-                        timeOutReload = 15;
-                        document.getElementById("testCenterSearchResults_wrapper").innerText = "No seat available in this region, will retry after 15s."
-                        setInterval(function() {
-                            if (timeOutReload == 0) {
-                                if (reloaded == false) {
-                                    console.log("[College Board SAT Semi-Auto Registration] Retry now.");
-                                    location.reload();
-                                    reloaded = true;
-                                }
-                            }
-                            else timeOutReload--;
-                            document.getElementById("testCenterSearchResults_wrapper").innerText = "No seat available in this region, will retry after " + timeOutReload + "s."
-                        }, 1000);
+                        countdown(15, document.getElementById("testCenterSearchResults_wrapper"), "No seat available in this region");
                     } else {
                         console.log("[College Board SAT Semi-Auto Registration] Select Ideal Test Center.");
                         console.log("[College Board SAT Semi-Auto Registration] Test Center Information:");
@@ -124,31 +115,16 @@
                         }
                     }
                 } else {
-                    console.log("[College Board SAT Semi-Auto Registration] Seat available.");
-                    alert("[College Board SAT Semi-Auto Registration] Seat available.");
+                    notify("Seat available.");
                 }
             } else {
                 if (document.getElementById("newCenterInfo") == null) {
-                    console.log("[College Board SAT Semi-Auto Registration] Please select another country.");
-                    alert("[College Board SAT Semi-Auto Registration] Please select another country.");
+                    notify("Please select another country and search again.");
                 }
             }
             break;
         case "https://nsat.collegeboard.org/errors/down.html":
-            console.log("[College Board SAT Semi-Auto Registration] Website down, will retry in 30s.");
-            timeOutReload = 30;
-            document.getElementsByClassName("cb-alert-heading")[0].getElementsByTagName("p")[0].innerText = "Website down, will retry after 30s."
-            setInterval(function() {
-                if (timeOutReload == 0) {
-                    if (reloaded == false) {
-                        console.log("[College Board SAT Semi-Auto Registration] Retry now.");
-                        location.href = "https://nsat.collegeboard.org/satweb/satHomeAction.action";
-                        reloaded = true;
-                    }
-                }
-                else timeOutReload--;
-                document.getElementsByClassName("cb-alert-heading")[0].getElementsByTagName("p")[0].innerText = "Website down, will retry after " + timeOutReload + "s."
-            }, 1000);
+            countdown(30, document.getElementsByClassName("cb-alert-heading")[0].getElementsByTagName("p")[0], "Website down", "https://nsat.collegeboard.org/satweb/satHomeAction.action");
             break;
     }
 })();
