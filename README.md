@@ -12,12 +12,14 @@ Features
 - Skip buying practice materials
 - Notify you during the seat is held
 - Refresh when the website is down
+- Auto pay for the new test using a credit card
 
 Usage
 ---
 1. Use Tampermonkey to load the content in main.js;
-2. Go to https://nsat.collegeboard.org/satweb/satHomeAction.action, sign in, and click *Auto Registration Settings*.
-3. Answer the questions to confirm the features you need.
+2. Grant notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ (or the plugin would get stuck);
+3. Go to https://nsat.collegeboard.org/satweb/satHomeAction.action, sign in, and click *Auto Registration Settings*;
+4. Answer the questions to enable the features you need.
 
 ![Settings](img/settings.png)
 
