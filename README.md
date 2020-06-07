@@ -1,5 +1,9 @@
 # College Board SAT Semi-Auto Registration
 
+Your helper in College Board SAT registration
+
+SAT is a registered trademark of the College Board, and this project is not affliated with either the College Board or SAT.
+
 Features
 ---
 - Continue to fill the personal information from the initial page

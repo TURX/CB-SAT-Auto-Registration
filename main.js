@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      1.14
-// @description  automatically complete several steps of SAT registration
+// @version      1.15
+// @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
 // @match        https://pps.collegeboard.org/*
@@ -21,8 +21,8 @@ function requestPermission() {
 
 function countdown(timeoutReload, element, desc, url) {
     var reloaded = false;
-    console.log("[College Board SAT Semi-Auto Registration] " + desc + ", will retry in 3s.");
-    element.innerText = desc + ", will retry after 3s.";
+    console.log("[College Board SAT Semi-Auto Registration] " + desc + ", will retry in " + timeoutReload + "s.");
+    element.innerText = desc + ", will retry after " + timeoutReload + "s.";
     setInterval(function() {
         if (timeoutReload == 0) {
             if (reloaded == false) {
@@ -67,9 +67,9 @@ function notify(content, emergency, ifAlert, ifTitle) {
         if (ifTitle) document.getElementsByClassName("s2-page-title")[0].innerText = content;
         new Notification(content, {body: "College Board SAT Semi-Auto Registration Notification"});
         if (emergency) {
-            await play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/misc/se_ymd05.ogg", 10, content);
+            await play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/se_ymd05.ogg", 10, content);
         } else {
-            await play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/misc/se_ymd05.ogg", 3, content);
+            await play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/se_ymd05.ogg", 3, content);
         }
         if (ifAlert) alert(content);
         return resolve();
@@ -234,7 +234,7 @@ function startSettings() {
                     } else {
                         document.getElementsByClassName("btn")[0].click();
                     }
-                }, 1000);
+                }, 3000);
             }
             break;
         case "https://nsat.collegeboard.org/satweb/processMySatAction.action":
