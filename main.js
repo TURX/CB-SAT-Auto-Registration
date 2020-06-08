@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      1.16
+// @version      1.17
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -136,7 +136,11 @@ function startSettings() {
             alert("Please agree to the terms of the College Board to use College Board SAT Semi-Auto Registration.");
             return;
         }
-        GM_setValue("cbsatar-login", confirm("Do you want to automaically log in your CB account remembered in your browser (if you have)?"));
+        GM_setValue("cbsatar-login", confirm("Do you want to automaically log in your CB account?"));
+        if (GM_getValue("cbsatar-login", false)) {
+            GM_setValue("cbsatar-username", prompt("Please fill the username of your CB account:", GM_getValue("cbsatar-username", "")));
+            GM_setValue("cbsatar-password", prompt("Please fill the password of your CB account:", GM_getValue("cbsatar-password", "")));
+        }
         GM_setValue("cbsatar-start", confirm("Do you want to automaically continue to fill the personal information from the initial page?"));
         GM_setValue("cbsatar-personalInfo", confirm("Do you want to skip filling the personal information?"));
         GM_setValue("cbsatar-terms", confirm("Do you want to automatically accept the terms?"));
@@ -154,9 +158,9 @@ function startSettings() {
         if (GM_getValue("cbsatar-pay", false)) {
             GM_setValue("cbsatar-held", false);
             GM_setValue("cbsatar-address1", prompt("Please fill the first line of your address (in 30 characters):", GM_getValue("cbsatar-address1", "")));
-            GM_setValue("cbsatar-cardType", prompt("Please fill the number of type of your credit card:\n(0: None (unable to process), 1: Discover, 2: Visa, 3: MasterCard, 4: American Express, 5: JCB)"), GM_getValue("cbsatar-cardType", "3"));
+            GM_setValue("cbsatar-cardType", prompt("Please fill the number of type of your credit card:\n(0: None (unable to process), 1: Discover, 2: Visa, 3: MasterCard, 4: American Express, 5: JCB)", GM_getValue("cbsatar-cardType", "3")));
             GM_setValue("cbsatar-cardNum", prompt("Please fill the number of your credit card:", GM_getValue("cbsatar-cardNum", "")));
-            GM_setValue("cbsatar-expireMonth", prompt("Please fill the month of expire of your credit card (1-12):", GM_getValue("cbsatar-expireMonth", "0")));
+            GM_setValue("cbsatar-expireMonth", prompt("Please fill the month of expire of your credit card (1-12):\nFor example, type 9 for September.", GM_getValue("cbsatar-expireMonth", "0")));
             GM_setValue("cbsatar-expireYear", prompt("Please fill the year of expire of your credit card using the last two digits (YY):\nFor example, type 21 for 2021.", GM_getValue("cbsatar-expireYear", "0")));
             GM_setValue("cbsatar-securityCode", prompt("Please fill the security code of expire of your credit card:", GM_getValue("cbsatar-securityCode", "")));
         } else {
@@ -169,6 +173,8 @@ function startSettings() {
         var review = "Settings - College Board SAT Semi-Auto Registration\n\n";
         review += "Agree terms of College Board: " + GM_getValue("cbsatar-agreeTerms", false) + "\n";
         review += "Auto login: " + GM_getValue("cbsatar-login", false) + "\n";
+        review += "CB username: " + GM_getValue("cbsatar-username", "") + "\n";
+        review += "CB password: " + GM_getValue("cbsatar-password", "") + "\n";
         review += "Skip start page: " + GM_getValue("cbsatar-start", false) + "\n";
         review += "Skip personal information: " + GM_getValue("cbsatar-personalInfo", false) + "\n";
         review += "Skip terms: " + GM_getValue("cbsatar-terms", false) + "\n";
@@ -226,15 +232,19 @@ function startSettings() {
         case "https://account.collegeboard.org/login/login":
             if (GM_getValue("cbsatar-login", false)) {
                 console.log("[College Board SAT Semi-Auto Registration] Login.");
-                setTimeout(function() {
-                    document.getElementById("username").blur();
-                    document.getElementById("password").blur();
-                    if (document.getElementsByClassName("btn")[0].disabled) {
-                        notify("The login information is invalid.", true, true, false);
-                    } else {
-                        document.getElementsByClassName("btn")[0].click();
-                    }
-                }, 1000);
+                document.getElementById("username").value = GM_getValue("cbsatar-username", "");
+                document.getElementById("password").value = GM_getValue("cbsatar-password", "");
+                console.log("[College Board SAT Semi-Auto Registration] Username: " + document.getElementById("username").value);
+                console.log("[College Board SAT Semi-Auto Registration] Password: " + document.getElementById("password").value);
+                document.getElementsByClassName("btn")[0].disabled = false;
+                document.getElementsByClassName("btn")[0].click();
+            }
+            break;
+        case "https://account.collegeboard.org/login/authenticateUser":
+            if (GM_getValue("cbsatar-login", false)) {
+                if (document.getElementsByClassName("cb-error-msg").length > 0) {
+                    notify("The login information is invalid.", true, true, false);
+                }
             }
             break;
         case "https://nsat.collegeboard.org/satweb/processMySatAction.action":

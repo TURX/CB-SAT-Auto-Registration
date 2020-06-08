@@ -7,6 +7,7 @@ SAT is a registered trademark of the College Board, and this project is not affl
 Features
 ---
 - Continue to fill the personal information from the initial page
+- Auto login to specified account
 - Skip filling of personal information
 - Accept the terms
 - Check if any registration date is available
@@ -14,9 +15,9 @@ Features
 - Check if any seat is available in the region you selected
 - Skip uploading of new photo
 - Skip buying practice materials
-- Notify you during the seat is held
-- Refresh when the website is down
+- Notify you during the seat is being held
 - Auto pay for the new test using a credit card
+- Refresh when the website is down
 
 Usage
 ---
