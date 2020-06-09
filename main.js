@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      18
+// @version      19
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -42,7 +42,7 @@ function countdown(timeoutReload, element, desc, url) {
         if (timeoutReload == 0) {
             if (reloaded == false) {
                 console.log("[College Board SAT Semi-Auto Registration] Retry now.");
-                if (url == undefined) location.reload();
+                if (url == undefined) history.go(0);
                 else location.href = url;
                 reloaded = true;
             }
@@ -177,7 +177,7 @@ function startSettings() {
             GM_setValue("cbsatar-cardNum", prompt("Please fill the number of your credit card:", GM_getValue("cbsatar-cardNum", "")));
             GM_setValue("cbsatar-expireMonth", prompt("Please fill the month of expire of your credit card (1-12):\nFor example, type 9 for September.", GM_getValue("cbsatar-expireMonth", "0")));
             GM_setValue("cbsatar-expireYear", prompt("Please fill the year of expire of your credit card using the last two digits (YY):\nFor example, type 21 for 2021.", GM_getValue("cbsatar-expireYear", "0")));
-            GM_setValue("cbsatar-securityCode", prompt("Please fill the security code of expire of your credit card:", GM_getValue("cbsatar-securityCode", "")));
+            GM_setValue("cbsatar-securityCode", prompt("Please fill the security code of your credit card:", GM_getValue("cbsatar-securityCode", "")));
         } else {
             GM_setValue("cbsatar-held", confirm("Do you want to be notified during the seat is held?"));
         }
