@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      20
+// @version      21
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -9,6 +9,7 @@
 // @match        https://account.collegeboard.org/*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_notification
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -18,20 +19,6 @@ function getIfMobile() {
         return true;
     }
     return false;
-}
-
-function requestPermission() {
-    if (!getIfMobile()) {
-        while (Notification.permission != "granted") {
-            Notification.requestPermission();
-            alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
-        }
-    } else {
-        if (Notification.permission != "granted") {
-            alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
-            Notification.requestPermission();
-        }
-    }
 }
 
 function countdown(timeoutReload, element, desc, url) {
@@ -57,21 +44,21 @@ function play(url, count) {
         var m = new Audio(url);
         var p = m.play();
         p.catch(error => {
-            alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
+            alert("Please grant the sound permission for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
         })
         m.addEventListener("ended", function (){
             if (count > 1) {
                 count--;
                 p = m.play();
                 p.catch(error => {
-                    alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
+                    alert("Please grant the sound permission for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
                 })
             } else {
                 resolve();
             }
         });
         m.addEventListener('error', ()=>{
-            alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
+            alert("Please grant the sound permission for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
         });
     });
 }
@@ -80,7 +67,13 @@ function notify(content, emergency, ifAlert, ifTitle) {
     return new Promise(async function(resolve) {
         console.log("[College Board SAT Semi-Auto Registration] " + content);
         if (ifTitle) document.getElementsByClassName("s2-page-title")[0].innerText = content;
-        new Notification(content, {body: "College Board SAT Semi-Auto Registration Notification"});
+        GM_notification({
+            text: content,
+            title: "College Board SAT Semi-Auto Registration Notification",
+            highlight: true,
+            silent: false,
+            timeout: 0
+        });
         if (emergency) {
             await play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/se_ymd05.wav", 10, content);
         } else {
@@ -218,8 +211,6 @@ function startSettings() {
     var url = window.location.href.substr(0, window.location.href.length - window.location.search.length);
     var error = false;
     console.log("[College Board SAT Semi-Auto Registration] Enabled, current URL: " + url);
-
-    requestPermission();
 
     if (!GM_getValue("cbsatar-agreeTerms", false)) {
         error = true;
