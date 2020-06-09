@@ -21,7 +21,7 @@ Features
 
 Usage
 ---
-1. Use Tampermonkey ([PC Chrome](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) or [Android Firefox](https://addons.mozilla.org/android/addon/tampermonkey/)) to load the content in main.js;
+1. Use [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) on Chromium-based browsers (e.g. Chrome on PCs and Kiwi Browser on Android devices) to load the content in main.js;
 2. Grant notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ (or the plugin would get stuck);
 3. Go to https://nsat.collegeboard.org/satweb/satHomeAction.action, sign in, and click *Auto Registration Settings*;
 4. Answer the questions to enable the features you need.

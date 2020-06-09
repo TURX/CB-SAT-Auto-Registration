@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      19
+// @version      20
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -28,8 +28,8 @@ function requestPermission() {
         }
     } else {
         if (Notification.permission != "granted") {
-            Notification.requestPermission();
             alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
+            Notification.requestPermission();
         }
     }
 }
@@ -42,7 +42,7 @@ function countdown(timeoutReload, element, desc, url) {
         if (timeoutReload == 0) {
             if (reloaded == false) {
                 console.log("[College Board SAT Semi-Auto Registration] Retry now.");
-                if (url == undefined) history.go(0);
+                if (url == undefined) location.reload();
                 else location.href = url;
                 reloaded = true;
             }
