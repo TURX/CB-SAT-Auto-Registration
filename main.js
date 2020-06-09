@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      21
+// @version      22
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -19,6 +19,12 @@ function getIfMobile() {
         return true;
     }
     return false;
+}
+
+function wait(time) {
+    return new Promise(function(resolve, reject) {
+        setTimeout(function() { resolve(); }, time);
+    });
 }
 
 function countdown(timeoutReload, element, desc, url) {
@@ -39,6 +45,8 @@ function countdown(timeoutReload, element, desc, url) {
     }, 1000);
 }
 
+var stopPlay = false;
+
 function play(url, count) {
     return new Promise(function(resolve, reject) {
         var m = new Audio(url);
@@ -47,9 +55,13 @@ function play(url, count) {
             alert("Please grant the sound permission for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
         })
         m.addEventListener("ended", function (){
-            if (count > 1) {
-                count--;
-                p = m.play();
+            if (count > 1 || count == -1) {
+                if (count != -1) count--;
+                if (count == -1 && stopPlay == true) {
+                    resolve();
+                } else {
+                    p = m.play();
+                }
                 p.catch(error => {
                     alert("Please grant the sound permission for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
                 })
@@ -74,12 +86,14 @@ function notify(content, emergency, ifAlert, ifTitle) {
             silent: false,
             timeout: 0
         });
+        stopPlay = false;
         if (emergency) {
-            await play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/se_ymd05.wav", 10, content);
+            play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/se_ymd05.wav", -1, content);
+            await wait(10000);
         } else {
             await play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/se_ymd05.wav", 3, content);
+            if (ifAlert) alert(content);
         }
-        if (ifAlert) alert(content);
         return resolve();
     });
 }
@@ -215,6 +229,10 @@ function startSettings() {
     if (!GM_getValue("cbsatar-agreeTerms", false)) {
         error = true;
     }
+
+    document.addEventListener("mousemove", function() {
+        if (!stopPlay) stopPlay = true;
+    });
 
     if (!error && document.getElementsByTagName("h1").length != 0 && url != "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action") {
         if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object" || document.getElementsByTagName("h1")[0].innerText == "Access Denied") {
@@ -359,7 +377,7 @@ function startSettings() {
                                 }
                             } else {
                                 if (document.getElementById("newCenterInfo") == null) {
-                                    notify("Please select another country and search again.", false, true, true);
+                                    notify("Please select another country and search again.", true, true, true);
                                 }
                             }
                         }
