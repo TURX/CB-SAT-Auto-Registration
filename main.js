@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      1.17
+// @version      18
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -12,10 +12,25 @@
 // @run-at       document-idle
 // ==/UserScript==
 
+function getIfMobile() {
+    var sUserAgent = navigator.userAgent;
+    if (sUserAgent.indexOf('Android') > -1 || sUserAgent.indexOf('iPhone') > -1 || sUserAgent.indexOf('iPad') > -1 || sUserAgent.indexOf('iPod') > -1 || sUserAgent.indexOf('Symbian') > -1) {
+        return true;
+    }
+    return false;
+}
+
 function requestPermission() {
-    while (Notification.permission != "granted") {
-        Notification.requestPermission();
-        alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
+    if (!getIfMobile()) {
+        while (Notification.permission != "granted") {
+            Notification.requestPermission();
+            alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
+        }
+    } else {
+        if (Notification.permission != "granted") {
+            Notification.requestPermission();
+            alert("Please grant the notification and sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Semi-Auto Registration.");
+        }
     }
 }
 
@@ -220,12 +235,15 @@ function startSettings() {
 
     if (url == "https://nsat.collegeboard.org/satweb/satHomeAction.action") {
         console.log("[College Board SAT Semi-Auto Registration] Homepage.");
-        var openSettingsLi = document.createElement("li");
+        var openSettingsLi1 = document.createElement("li");
         var openSettingsA = document.createElement("a");
         openSettingsA.innerText = "Auto Registration Settings";
         openSettingsA.addEventListener("click", startSettings);
-        openSettingsLi.appendChild(openSettingsA);
-        document.getElementsByClassName("cb-desktop-navigation")[0].children[0].children[0].children[1].appendChild(openSettingsLi);
+        openSettingsLi1.appendChild(openSettingsA);
+        document.getElementsByClassName("cb-desktop-navigation")[0].children[0].children[0].children[1].appendChild(openSettingsLi1);
+        var openSettingsLi2 = openSettingsLi1.cloneNode(true);
+        openSettingsLi2.children[0].addEventListener("click", startSettings);
+        document.getElementsByClassName("cb-mobile-navigation")[0].children[1].children[0].children[0].appendChild(openSettingsLi2);
     }
 
     if (!error) switch (url) {
