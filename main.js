@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      22
+// @version      23
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -219,9 +219,7 @@ function startSettings() {
     }
 }
 
-(function() {
-    'use strict';
-
+function main() {
     var url = window.location.href.substr(0, window.location.href.length - window.location.search.length);
     var error = false;
     console.log("[College Board SAT Semi-Auto Registration] Enabled, current URL: " + url);
@@ -353,8 +351,12 @@ function startSettings() {
                                 }
                                 if (!seatAvailable) {
                                     if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("My Ideal Test Center") == -1) {
-                                        document.getElementById("sortLinks").remove();
-                                        document.getElementById("availabilityFilter").remove();
+                                        try {
+                                            document.getElementById("sortLinks").remove();
+                                            document.getElementById("availabilityFilter").remove();
+                                        } catch (e) {
+                                            notify("Content error.", false, false, true);
+                                        }
                                         countdown(15, document.getElementById("testCenterSearchResults_wrapper"), "No seat available in this region");
                                     } else {
                                         document.getElementById("testCenterSearchResults_first").click();
@@ -460,5 +462,16 @@ function startSettings() {
                 }
             }, 3000);
             break;
+    }
+}
+
+(function() {
+    'use strict';
+
+    try {
+        main();
+    } catch (e) {
+        console.log("[College Board SAT Semi-Auto Registration] Error: " + e);
+        notify("Error occurred.", true, false, false);
     }
 })();
