@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      23
+// @version      24
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -31,6 +31,7 @@ function countdown(timeoutReload, element, desc, url) {
     var reloaded = false;
     console.log("[College Board SAT Semi-Auto Registration] " + desc + ", will retry in " + timeoutReload + "s.");
     element.innerText = desc + ", will retry after " + timeoutReload + "s.";
+    element.scrollIntoView();
     setInterval(function() {
         if (timeoutReload == 0) {
             if (reloaded == false) {
