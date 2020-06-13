@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      24
+// @version      25
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -114,6 +114,8 @@ async function selectCenter() {
         document.getElementById("testCenterSearchResults_next").click();
     }
     document.getElementsByClassName("selectCenter")[0].click();
+    document.getElementById("modalOKBtn").click();
+    // document.getElementById("id-messageRegEPIStudy-yes-button").click();
 }
 
 async function confirmCenter() {
