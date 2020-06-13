@@ -99,8 +99,10 @@ function notify(content, emergency, ifAlert, ifTitle) {
     });
 }
 
+var i;
+
 function selectItemByValue(element, value) {
-    for (var i = 0; i < element.options.length; i++) {
+    for (i = 0; i < element.options.length; i++) {
         if (element.options[i].value === value) {
             element.selectedIndex = i;
             break;
@@ -345,16 +347,17 @@ function main() {
                         } else if (GM_getValue("cbsatar-seats", false)) {
                             console.log("[College Board SAT Semi-Auto Registration] Finding seat...");
                             if (document.getElementById("testCenterSearchResults_wrapper") != null) {
+                                var tdTags, searchText, found;
                                 var seatAvailable = false;
                                 console.log("[College Board SAT Semi-Auto Registration] Test Center Information:");
                                 while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
                                     console.log(document.getElementById("testCenterSearchResults_wrapper").innerText);
                                     if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
                                         if (GM_getValue("cbsatar-enable-preferSelect", false) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
-                                            var tdTags = document.getElementsByTagName("td");
-                                            var searchText = GM_getValue("cbsatar-preferSelect", "BANGKOK");
-                                            var found;
-                                            for (var i = 0; i < tdTags.length; i++) {
+                                            tdTags = document.getElementsByTagName("td");
+                                            searchText = GM_getValue("cbsatar-preferSelect", "BANGKOK");
+                                            found;
+                                            for (i = 0; i < tdTags.length; i++) {
                                                 if (tdTags[i].innerText.search(searchText) != -1) {
                                                     found = tdTags[i];
                                                     if ($(found).closest('td').next('td').text() == "Seat Available") {
@@ -374,10 +377,10 @@ function main() {
                                 if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
                                     if (GM_getValue("cbsatar-enable-preferSelect", false) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
                                         console.log("[College Board SAT Semi-Auto Registration] Prefer Select: " + GM_getValue("cbsatar-preferSelect", "BANGKOK"));
-                                        var tdTags = document.getElementsByTagName("td");
-                                        var searchText = GM_getValue("cbsatar-preferSelect", "BANGKOK");
-                                        var found;
-                                        for (var i = 0; i < tdTags.length; i++) {
+                                        tdTags = document.getElementsByTagName("td");
+                                        searchText = GM_getValue("cbsatar-preferSelect", "BANGKOK");
+                                        found;
+                                        for (i = 0; i < tdTags.length; i++) {
                                             if (tdTags[i].innerText.search(searchText) != -1) {
                                                 found = tdTags[i];
                                                 if ($(found).closest('td').next('td').text() == "Seat Available") {
@@ -402,7 +405,6 @@ function main() {
                                         document.getElementById("testCenterSearchResults_first").click();
                                         console.log("[College Board SAT Semi-Auto Registration] Select Ideal Test Center.");
                                         console.log("[College Board SAT Semi-Auto Registration] Test Center Information:");
-                                        var i;
                                         while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
                                             for (i = 1; i < document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr").length; i++) {
                                                 console.log("[College Board SAT Semi-Auto Registration] Code: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[2].getElementsByTagName("a")[0].getAttribute("data-code") + "; Name: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[0].innerText)
