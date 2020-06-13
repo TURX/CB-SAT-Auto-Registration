@@ -114,6 +114,8 @@ async function selectCenter() {
         document.getElementById("testCenterSearchResults_next").click();
     }
     document.getElementsByClassName("selectCenter")[0].click();
+    document.getElementById("modalOKBtn").click();
+    // document.getElementById("id-messageRegEPIStudy-yes-button").click();
 }
 
 async function confirmCenter() {
@@ -171,7 +173,10 @@ function startSettings() {
         GM_setValue("cbsatar-prefer", confirm("Do you prefer a new test center?"));
         if (GM_getValue("cbsatar-prefer", true)) {
             GM_setValue("cbsatar-tcselect", confirm("Do you want to skip selecting a test center and go to the next page?"));
-            GM_setValue("cbsatar-preferSelect", prompt("Do you want to add more condition for Search Result Tables? (e.g: BANGKOK)", GM_getValue("cbsatar-preferSelect", "")));
+            GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add more condition for Search Result Tables? (e.g: BANGKOK)"));
+            if (GM_getValue("cbsatar-enable-preferSelect", true)) {
+                GM_setValue("cbsatar-preferSelect", prompt("What condition do you need more? (e.g: BANGKOK)", GM_getValue("cbsatar-preferSelect", "")));
+            }
             GM_setValue("cbsatar-seats", confirm("Do you want to automaically check if any seat is available in the region you selected?"));
         } else {
             GM_setValue("cbsatar-seats", false);
@@ -341,36 +346,44 @@ function main() {
                                 console.log("[College Board SAT Semi-Auto Registration] Test Center Information:");
                                 while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
                                     console.log(document.getElementById("testCenterSearchResults_wrapper").innerText);
-                                    if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1 && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "Seat Available")) != -1) {
-                                        var tdTags = document.getElementsByTagName("td");
-                                        var searchText = GM_getValue("cbsatar-preferSelect", "Seat Available");
-                                        var found;
-                                        for (var i = 0; i < tdTags.length; i++) {
-                                          if (tdTags[i].innerText.search(searchText) != -1) {
-                                            found = tdTags[i];
-                                            if ($(found).closest('td').next('td').text() == "Seat Available") {
-                                                seatAvailable = true;
+                                    if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
+                                        if (GM_getValue("cbsatar-enable-preferSelect", true) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "Seat Available")) != -1) {
+                                            var tdTags = document.getElementsByTagName("td");
+                                            var searchText = GM_getValue("cbsatar-preferSelect", "Seat Available");
+                                            var found;
+                                            for (var i = 0; i < tdTags.length; i++) {
+                                              if (tdTags[i].innerText.search(searchText) != -1) {
+                                                found = tdTags[i];
+                                                if ($(found).closest('td').next('td').text() == "Seat Available") {
+                                                    seatAvailable = true;
+                                                }
+                                                break;
+                                              }
                                             }
-                                            break;
-                                          }
+                                        } else {
+                                            seatAvailable = true;
                                         }
                                     }
                                     document.getElementById("testCenterSearchResults_next").click();
                                 }
                                 console.log("PreferSelect: " + GM_getValue("cbsatar-preferSelect", "Seat Available"));
                                 console.log(document.getElementById("testCenterSearchResults_wrapper").innerText);
-                                if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1 && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "Seat Available")) != -1) {
-                                    var tdTags = document.getElementsByTagName("td");
-                                    var searchText = GM_getValue("cbsatar-preferSelect", "Seat Available");
-                                    var found;
-                                    for (var i = 0; i < tdTags.length; i++) {
-                                        if (tdTags[i].innerText.search(searchText) != -1) {
-                                            found = tdTags[i];
-                                            if ($(found).closest('td').next('td').text() == "Seat Available") {
-                                                seatAvailable = true;
+                                if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
+                                    if (GM_getValue("cbsatar-enable-preferSelect", true) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "Seat Available")) != -1) {
+                                        var tdTags = document.getElementsByTagName("td");
+                                        var searchText = GM_getValue("cbsatar-preferSelect", "Seat Available");
+                                        var found;
+                                        for (var i = 0; i < tdTags.length; i++) {
+                                            if (tdTags[i].innerText.search(searchText) != -1) {
+                                                found = tdTags[i];
+                                                if ($(found).closest('td').next('td').text() == "Seat Available") {
+                                                    seatAvailable = true;
+                                                }
+                                                break;
                                             }
-                                            break;
                                         }
+                                    } else {
+                                        seatAvailable = true;
                                     }
                                 }
                                 if (!seatAvailable) {
