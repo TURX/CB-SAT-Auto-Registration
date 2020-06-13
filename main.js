@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      25
+// @version      26
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -172,9 +172,14 @@ function startSettings() {
         GM_setValue("cbsatar-dates", confirm("Do you want to automaically check if any registration date is available?"));
         GM_setValue("cbsatar-prefer", confirm("Do you prefer a new test center?"));
         if (GM_getValue("cbsatar-prefer", true)) {
-            GM_setValue("cbsatar-tcselect", confirm("Do you want to to skip selecting a test center and go to the next page?"));
+            GM_setValue("cbsatar-tcselect", confirm("Do you want to skip selecting a test center and go to the next page?"));
+            GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add more condition for Search Result Tables?"));
+            if (GM_getValue("cbsatar-enable-preferSelect", false)) {
+                GM_setValue("cbsatar-preferSelect", prompt("What condition do you need more? (e.g: BANGKOK)", GM_getValue("cbsatar-preferSelect", "BANGKOK")));
+            }
             GM_setValue("cbsatar-seats", confirm("Do you want to automaically check if any seat is available in the region you selected?"));
         } else {
+            GM_setValue("cbsatar-enable-preferSelect", false);
             GM_setValue("cbsatar-seats", false);
         }
         GM_setValue("cbsatar-photo", confirm("Do you want to skip uploading a new photo?"));
@@ -206,6 +211,8 @@ function startSettings() {
         review += "Check dates: " + GM_getValue("cbsatar-dates", false) + "\n";
         review += "Auto select test center: " + GM_getValue("cbsatar-tcselect", false) + "\n";
         review += "Prefer a new test center: " + GM_getValue("cbsatar-prefer", false) + "\n";
+        review += "Conditioned Selection: " + GM_getValue("cbsatar-enable-preferSelect", false) + "\n";
+        review += "Condition: " + GM_getValue("cbsatar-preferSelect", "None") + "\n";
         review += "Auto find seat: " + GM_getValue("cbsatar-seats", false) + "\n";
         review += "Skip practice materials: " + GM_getValue("cbsatar-practice", true) + "\n";
         review += "Auto pay: " + GM_getValue("cbsatar-pay", false) + "\n";
@@ -343,14 +350,44 @@ function main() {
                                 while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
                                     console.log(document.getElementById("testCenterSearchResults_wrapper").innerText);
                                     if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
-                                        seatAvailable = true;
-                                        break;
+                                        if (GM_getValue("cbsatar-enable-preferSelect", false) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
+                                            var tdTags = document.getElementsByTagName("td");
+                                            var searchText = GM_getValue("cbsatar-preferSelect", "BANGKOK");
+                                            var found;
+                                            for (var i = 0; i < tdTags.length; i++) {
+                                                if (tdTags[i].innerText.search(searchText) != -1) {
+                                                    found = tdTags[i];
+                                                    if ($(found).closest('td').next('td').text() == "Seat Available") {
+                                                        seatAvailable = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            seatAvailable = true;
+                                            break;
+                                        }
                                     }
                                     document.getElementById("testCenterSearchResults_next").click();
                                 }
                                 console.log(document.getElementById("testCenterSearchResults_wrapper").innerText);
                                 if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
-                                    seatAvailable = true;
+                                    if (GM_getValue("cbsatar-enable-preferSelect", false) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
+                                        console.log("[College Board SAT Semi-Auto Registration] Prefer Select: " + GM_getValue("cbsatar-preferSelect", "BANGKOK"));
+                                        var tdTags = document.getElementsByTagName("td");
+                                        var searchText = GM_getValue("cbsatar-preferSelect", "BANGKOK");
+                                        var found;
+                                        for (var i = 0; i < tdTags.length; i++) {
+                                            if (tdTags[i].innerText.search(searchText) != -1) {
+                                                found = tdTags[i];
+                                                if ($(found).closest('td').next('td').text() == "Seat Available") {
+                                                    seatAvailable = true;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        seatAvailable = true;
+                                    }
                                 }
                                 if (!seatAvailable) {
                                     if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("My Ideal Test Center") == -1) {
