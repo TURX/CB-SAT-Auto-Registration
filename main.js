@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      26
+// @version      27
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -11,6 +11,8 @@
 // @grant        GM_getValue
 // @grant        GM_notification
 // @run-at       document-idle
+// @updateURL    https://raw.githubusercontent.com/TURX/CB-SAT-Auto-Registration/master/main.js
+// @supportURL   https://github.com/TURX/CB-SAT-Auto-Registration/issues
 // ==/UserScript==
 
 function getIfMobile() {
@@ -90,7 +92,7 @@ function notify(content, emergency, ifAlert, ifTitle) {
         stopPlay = false;
         if (emergency) {
             play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/se_ymd05.wav", -1, content);
-            await wait(10000);
+            await wait(5000);
         } else {
             await play("https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/se_ymd05.wav", 3, content);
             if (ifAlert) alert(content);
@@ -174,10 +176,13 @@ function startSettings() {
         GM_setValue("cbsatar-dates", confirm("Do you want to automaically check if any registration date is available?"));
         GM_setValue("cbsatar-prefer", confirm("Do you prefer a new test center?"));
         if (GM_getValue("cbsatar-prefer", true)) {
-            GM_setValue("cbsatar-tcselect", confirm("Do you want to skip selecting a test center and go to the next page?"));
-            GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add more condition for Search Result Tables?"));
+            GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add more condition for search result tables?"));
             if (GM_getValue("cbsatar-enable-preferSelect", false)) {
                 GM_setValue("cbsatar-preferSelect", prompt("What condition do you need more? (e.g: BANGKOK)", GM_getValue("cbsatar-preferSelect", "BANGKOK")));
+                GM_setValue("cbsatar-tcselect", false);
+            } else {
+                GM_setValue("cbsatar-tcselect", confirm("Do you want to skip selecting a test center and go to the next page?"));
+                GM_setValue("cbsatar-preferSelect", "None");
             }
             GM_setValue("cbsatar-seats", confirm("Do you want to automaically check if any seat is available in the region you selected?"));
         } else {
@@ -492,11 +497,8 @@ function main() {
                                 document.getElementById("securityCode").value = GM_getValue("cbsatar-securityCode", "");
                                 document.getElementById("securityCode").blur();
                                 setTimeout(function() {
-                                    if (document.getElementsByName("submit")[0].disabled) {
-                                        notify("The payment information is invalid.", true, true, false);
-                                    } else {
-                                        confirmPay();
-                                    }
+                                    document.getElementsByName("submit")[0].disabled = false;
+                                    confirmPay();
                                 });
                             }, 1000);
                         }
