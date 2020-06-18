@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Semi-Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      27
+// @version      28
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -112,6 +112,15 @@ function selectItemByValue(element, value) {
     }
 }
 
+function selectItemByText(element, text) {
+    for (i = 0; i < element.options.length; i++) {
+        if (element.options[i].text === text) {
+            element.selectedIndex = i;
+            break;
+        }
+    }
+}
+
 async function selectCenter() {
     await notify("Seat available.", true, false, true);
     while (document.getElementsByClassName("selectCenter").length == 0) {
@@ -176,9 +185,15 @@ function startSettings() {
         GM_setValue("cbsatar-dates", confirm("Do you want to automaically check if any registration date is available?"));
         GM_setValue("cbsatar-prefer", confirm("Do you prefer a new test center?"));
         if (GM_getValue("cbsatar-prefer", true)) {
+            GM_setValue("cbsatar-country", confirm("Do you want to automatically select a country?"));
+            if (GM_getValue("cbsatar-country", false)) {
+                GM_setValue("cbsatar-countryName", prompt("Please the country name that would appear in the dropdown menu:\nFor example, Thailand.", GM_getValue("cbsatar-countryName", "None")));
+            } else {
+                GM_setValue("cbsatar-countryName", "None");
+            }
             GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add more condition for search result tables?"));
             if (GM_getValue("cbsatar-enable-preferSelect", false)) {
-                GM_setValue("cbsatar-preferSelect", prompt("What condition do you need more? (e.g: BANGKOK)", GM_getValue("cbsatar-preferSelect", "BANGKOK")));
+                GM_setValue("cbsatar-preferSelect", prompt("What condition do you need more?\nFor example: BANGKOK.", GM_getValue("cbsatar-preferSelect", "BANGKOK")));
                 GM_setValue("cbsatar-tcselect", false);
             } else {
                 GM_setValue("cbsatar-tcselect", confirm("Do you want to skip selecting a test center and go to the next page?"));
@@ -207,7 +222,7 @@ function startSettings() {
         notify("You are set for main page if you have the sound permission allowed.", false, true, false);
         alert("Congratulations:\nThe settings are completed. Enjoy!");
     } else {
-        var review = "Settings - College Board SAT Semi-Auto Registration\n\n";
+        var review = "Settings - College Board SAT Semi-Auto Registration (Page 1/2)\n\n";
         review += "Agree terms of College Board: " + GM_getValue("cbsatar-agreeTerms", false) + "\n";
         review += "Auto login: " + GM_getValue("cbsatar-login", false) + "\n";
         review += "CB username: " + GM_getValue("cbsatar-username", "") + "\n";
@@ -217,13 +232,18 @@ function startSettings() {
         review += "Skip terms: " + GM_getValue("cbsatar-terms", false) + "\n";
         review += "Check dates: " + GM_getValue("cbsatar-dates", false) + "\n";
         review += "Auto select test center: " + GM_getValue("cbsatar-tcselect", false) + "\n";
-        review += "Prefer a new test center: " + GM_getValue("cbsatar-prefer", false) + "\n";
+        review += "Prefer a new test center: " + GM_getValue("cbsatar-prefer", true) + "\n";
+        review += "Auto select country: " + GM_getValue("cbsatar-country", false) + "\n";
+        review += "Country name: " + GM_getValue("cbsatar-countryName", "None") + "\n";
         review += "Conditioned Selection: " + GM_getValue("cbsatar-enable-preferSelect", false) + "\n";
         review += "Condition: " + GM_getValue("cbsatar-preferSelect", "None") + "\n";
         review += "Auto find seat: " + GM_getValue("cbsatar-seats", false) + "\n";
-        review += "Skip practice materials: " + GM_getValue("cbsatar-practice", true) + "\n";
+        review += "Skip practice materials: " + GM_getValue("cbsatar-practice", false) + "\n";
         review += "Auto pay: " + GM_getValue("cbsatar-pay", false) + "\n";
         review += "Notify when held: " + GM_getValue("cbsatar-held", false) + "\n";
+        console.log(review);
+        alert(review);
+        review = "Settings - College Board SAT Semi-Auto Registration (Page 2/2)\n\n";
         review += "Address 1: " + GM_getValue("cbsatar-address1", "") + "\n";
         review += "Card type: " + GM_getValue("cbsatar-cardType", 3) + "\n";
         review += "Card number: " + GM_getValue("cbsatar-cardNum", "") + "\n";
@@ -350,6 +370,15 @@ function main() {
                             }
                             break;
                         } else if (GM_getValue("cbsatar-seats", false)) {
+                            if (GM_getValue("cbsatar-country", false)) {
+                                var countrySelect = document.getElementById("selectCountryName");
+                                console.log("[College Board SAT Semi-Auto Registration] Selected Country: " +  countrySelect.options[countrySelect.selectedIndex].text);
+                                if (countrySelect.options[countrySelect.selectedIndex].text != GM_getValue("cbsatar-countryName", "None") && GM_getValue("cbsatar-countryName", "None") != "None") {
+                                    console.log("[College Board SAT Semi-Auto Registration] Preferred Country: " +  GM_getValue("cbsatar-countryName", "None"));
+                                    selectItemByText(countrySelect, GM_getValue("cbsatar-countryName", "None"));
+                                    document.getElementById("searchByZipOrCountry").click();
+                                }
+                            }
                             console.log("[College Board SAT Semi-Auto Registration] Finding seat...");
                             if (document.getElementById("testCenterSearchResults_wrapper") != null) {
                                 var tdTags, searchText, found;

@@ -11,6 +11,8 @@ Features
 - Skip filling of personal information
 - Accept the terms
 - Check if any registration date is available
+- Select a country from the dropdown menu
+- Notify for a test center with condition
 - Select a test center and go to the payment page
 - Check if any seat is available in the region you selected
 - Skip uploading of new photo
