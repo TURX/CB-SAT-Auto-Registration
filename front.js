@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      29
+// @version      30
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -82,20 +82,45 @@ function send(url, content) {
     });
 }
 
+function sendg(url, content) {
+    return new Promise(function(resolve, reject) {
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function() {
+            if (req.readyState == 4) {
+                if (req.status == 200) {
+                    resolve();
+                    return req.responseText;
+                } else {
+                    reject();
+                }
+            }
+        }
+        if (content) {
+            url += "?";
+            for (var k in content) {
+                url += k + "=" + encodeURIComponent(content[k]) + "&";
+            }
+            url = url.slice(0, -1);
+        }
+        console.log("[College Board SAT Auto Registration] Ready to open " + url);
+        req.open("GET", url, true);
+        req.send(null);
+    });
+}
+
 var stopPlay = false;
 
 async function play(url, count, content) {
     return new Promise(async function(resolve, reject) {
-        try {
-            await send("http://" + GM_getValue("cbsatar-audioHost", "localhost") + ":8080/startPlay", {
-                "count": count,
-                "reason": content
-            });
-        } catch (e) {
+        var promise = await send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/startPlay", {
+            "count": count,
+            "reason": content
+        });
+        promise.catch(async function(e) {
             console.log(e);
             if (count >= 0) await browserPlay(url, count);
             else browserPlay(url, count);
-        }
+        });
         resolve();
     });
 }
@@ -269,7 +294,7 @@ function startSettings() {
             GM_setValue("cbsatar-held", confirm("Do you want to be notified during the seat is held?"));
         }
         GM_setValue("cbsatar-down", confirm("Do you want to automaically refresh when the website is down?"));
-        GM_setValue("cbsatar-audioHost", prompt("Please fill the host for the audio backend:\nlocalhost: for no backend or backend on this PC", GM_getValue("cbsatar-audioHost", "localhost")))
+        GM_setValue("cbsatar-backend", prompt("Please fill the host for the backend:\nlocalhost: for no backend or backend on this PC", GM_getValue("cbsatar-backend", "localhost")))
         notify("You are set for main page if you have the sound permission allowed.", false, true, false);
         alert("Congratulations:\nThe settings are completed. Enjoy!");
     } else {
@@ -303,7 +328,7 @@ function startSettings() {
         review += "Expire year: " + GM_getValue("cbsatar-expireYear", 0) + "\n";
         review += "Security code: " + GM_getValue("cbsatar-securityCode", "") + "\n";
         review += "Auto refresh when down: " + GM_getValue("cbsatar-down", false) + "\n";
-        review += "Audio host: " + GM_getValue("cbsatar-audioHost", "localhost");
+        review += "Backend host: " + GM_getValue("cbsatar-backend", "localhost");
         console.log(review);
         alert(review);
     }
@@ -314,13 +339,26 @@ function main() {
     var error = false;
     console.log("[College Board SAT Auto Registration] Enabled, current URL: " + url);
 
+    var promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/visit", {
+        "url": url
+    });
+    promise.catch((e) => {
+        console.log("[College Board SAT Auto Registration] Backend visit error: " + e);
+    });
+
+    document.addEventListener("mousemove", function() {
+        if (!stopPlay) {
+            stopPlay = true;
+            var promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/stopPlay");
+            promise.catch((e) => {
+                console.log("[College Board SAT Auto Registration] Backend stopPlay error: " + e);
+            });
+        }
+    });
+
     if (!GM_getValue("cbsatar-agreeTerms", false)) {
         error = true;
     }
-
-    document.addEventListener("mousemove", function() {
-        if (!stopPlay) stopPlay = true;
-    });
 
     if (!error && document.getElementsByTagName("h1").length != 0 && url != "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action") {
         if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object" || document.getElementsByTagName("h1")[0].innerText == "Access Denied") {
@@ -434,9 +472,9 @@ function main() {
                         } else if (GM_getValue("cbsatar-seats", false)) {
                             if (GM_getValue("cbsatar-country", false)) {
                                 var countrySelect = document.getElementById("selectCountryName");
-                                console.log("[College Board SAT Auto Registration] Selected Country: " +  countrySelect.options[countrySelect.selectedIndex].text);
+                                console.log("[College Board SAT Auto Registration] Selected Country: " + countrySelect.options[countrySelect.selectedIndex].text);
                                 if (countrySelect.options[countrySelect.selectedIndex].text != GM_getValue("cbsatar-countryName", "None") && GM_getValue("cbsatar-countryName", "None") != "None") {
-                                    console.log("[College Board SAT Auto Registration] Preferred Country: " +  GM_getValue("cbsatar-countryName", "None"));
+                                    console.log("[College Board SAT Auto Registration] Preferred Country: " + GM_getValue("cbsatar-countryName", "None"));
                                     selectItemByText(countrySelect, GM_getValue("cbsatar-countryName", "None"));
                                     document.getElementById("searchByZipOrCountry").click();
                                 }
@@ -517,7 +555,19 @@ function main() {
                                 }
                             } else {
                                 if (document.getElementById("newCenterInfo") == null) {
-                                    notify("Please select another country and search again.", true, true, true);
+                                    if (window.location.href != "https://nsat.collegeboard.org/satweb/registration/updateTestAndDateAction.action" || !GM_getValue("cbsatar-country", false)) {
+                                        if (GM_getValue("cbsatar-country", false)) {
+                                            var countrySelect = document.getElementById("selectCountryName");
+                                            console.log("[College Board SAT Auto Registration] Selected Country: " + countrySelect.options[countrySelect.selectedIndex].text);
+                                            if (countrySelect.options[countrySelect.selectedIndex].text != GM_getValue("cbsatar-countryName", "None") && GM_getValue("cbsatar-countryName", "None") != "None") {
+                                                console.log("[College Board SAT Auto Registration] Preferred Country: " + GM_getValue("cbsatar-countryName", "None"));
+                                                selectItemByText(countrySelect, GM_getValue("cbsatar-countryName", "None"));
+                                                document.getElementById("searchByZipOrCountry").click();
+                                            }
+                                        } else {
+                                            notify("Please select another country and search again.", true, true, true);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -600,18 +650,37 @@ function main() {
     }
 }
 
+async function handleError(e) {
+    console.log("[College Board SAT Auto Registration] Error detected: " + e);
+    var errorPageCount = await sendg("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/errorHandler", {
+        "url": window.location.href.substr(0, window.location.href.length - window.location.search.length),
+        "e": e
+    });
+    var errorSendError = false;
+    errorPageCount.catch((err) => {
+        errorSendError = true;
+        console.log("[College Board SAT Auto Registration] Error send error to backend: " + err);
+        notify("Error occurred.", true, false, false);
+    });
+    if (errorSendError == false) {
+        if (errorPageCount < 10) {
+            location.reload();
+        } else {
+            notify("Error occurred.", true, false, false);
+        }
+    }
+}
+
 (function() {
     'use strict';
 
     window.addEventListener("error", function (e) {
-        console.log("[College Board SAT Auto Registration] Error detected: " + e.error.message);
-        notify("Error occurred.", true, false, false);
-    })
+        handleError(e.error.message);
+    });
 
     try {
         main();
     } catch (e) {
-        console.log("[College Board SAT Auto Registration] Error: " + e);
-        notify("Error occurred.", true, false, false);
+        handleError(e);
     }
 })();

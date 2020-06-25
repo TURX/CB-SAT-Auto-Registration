@@ -21,7 +21,9 @@ Features
 - Notify you during the seat is being held
 - Auto pay for the new test using a credit card
 - Refresh when the website is down
-- Notify using sound with no jam
+- Notify using sound with no jam (backend needed)
+- Handle errors intelligently (backend needed)
+- Log the status (backend needed)
 
 Basic Usage
 ---
