@@ -24,6 +24,7 @@ Features
 - Notify using sound with no jam (backend needed)
 - Handle errors intelligently (backend needed)
 - Log the status (backend needed)
+- Notify when idle
 
 Basic Usage
 ---
