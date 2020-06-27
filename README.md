@@ -4,6 +4,8 @@ Your helper in College Board SAT registration
 
 SAT is a registered trademark of the College Board, and this project is not affliated with either the College Board or SAT.
 
+This plugin currently only supports international registration, but it can be easily adapted for test centers within the U.S.
+
 Features
 ---
 - Continue to fill the personal information from the initial page
@@ -12,6 +14,7 @@ Features
 - Accept the terms
 - Brute mode with no refresh interval
 - Check if any registration date is available
+- Select the date for only once
 - Select a country from the dropdown menu
 - Notify for a test center with condition
 - Select a test center and go to the payment page

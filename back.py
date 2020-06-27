@@ -5,10 +5,11 @@ import threading
 from playsound import playsound
 
 host = ("0.0.0.0", 8080)
-versionNum = "31"
+versionNum = "32"
 soundPlayCount = -1
 soundPlayStop = False
 soundPlaying = False
+soundForIdle = False
 lastUrl = ""
 visitCount = 0
 errorCount = 0
@@ -30,8 +31,9 @@ def log(str):
     print("[College Board SAT Auto Registration] " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str)
 
 def idle():
-    global soundPlaying, soundPlayCount, soundPlayStop
+    global soundPlaying, soundPlayCount, soundPlayStop, soundForIdle
     log("event: idle")
+    soundForIdle = True
     if (soundPlaying == False):
         soundPlayCount = -1
         soundPlayStop = False
@@ -45,7 +47,7 @@ timerIdle = threading.Timer(60.0, idle)
 
 class Request(BaseHTTPRequestHandler):
     def do_GET(self):
-        global soundPlayStop, soundPlaying, soundPlayCount, lastUrl, visitCount, errorCount, noError, timerIdle
+        global soundPlayStop, soundPlaying, soundPlayCount, lastUrl, visitCount, errorCount, noError, timerIdle, soundForIdle
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-type", "application/json")
@@ -55,6 +57,11 @@ class Request(BaseHTTPRequestHandler):
         query = urllib.parse.parse_qs(urlInfo.query)
         if (path == "/startPlay") or (path == "/stopPlay") or (path == "/visit") or (path == "/errorHandler") or (path == "/log"):
             self.send_response(200)
+            if (soundForIdle == True):
+                soundForIdle = False
+                soundPlayStop = True
+                soundPlaying = False
+                log("event: stop playing sound by idle")
             timerIdle.cancel()
             timerIdle = threading.Timer(60.0, idle)
             timerIdle.start()
@@ -86,7 +93,7 @@ class Request(BaseHTTPRequestHandler):
         elif path == "/stopPlay":
             soundPlayStop = True
             soundPlaying = False
-            log("stop playing sound")
+            log("event: stop playing sound by request")
             responseBody = "completed"
         elif path == "/visit":
             print()

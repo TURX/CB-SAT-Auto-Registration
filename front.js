@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         College Board SAT Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
-// @version      31
+// @version      32
 // @description  Your helper in College Board SAT registration
 // @author       TURX
 // @match        https://nsat.collegeboard.org/*
@@ -283,6 +283,7 @@ function startSettings() {
         GM_setValue("cbsatar-terms", confirm("Do you want to automatically accept the terms?"));
         GM_setValue("cbsatar-brute", confirm("Do you want a brute mode (no refresh interval)?"));
         GM_setValue("cbsatar-dates", confirm("Do you want to automaically check if any registration date is available?"));
+        GM_setValue("cbsatar-selectDate", confirm("Do you want to automaically select the set date when continuing registration?"));
         GM_setValue("cbsatar-prefer", confirm("Do you prefer a new test center?"));
         if (GM_getValue("cbsatar-prefer", true)) {
             GM_setValue("cbsatar-country", confirm("Do you want to automatically select a country?"));
@@ -333,6 +334,7 @@ function startSettings() {
         review += "Skip terms: " + GM_getValue("cbsatar-terms", false) + "\n";
         review += "Brute mode: " + GM_getValue("cbsatar-brute", false) + "\n";
         review += "Check dates: " + GM_getValue("cbsatar-dates", false) + "\n";
+        review += "Auto select date: " + GM_getValue("cbsatar-selectDate", false) + "\n";
         review += "Auto select test center: " + GM_getValue("cbsatar-tcselect", false) + "\n";
         review += "Prefer a new test center: " + GM_getValue("cbsatar-prefer", true) + "\n";
         review += "Auto select country: " + GM_getValue("cbsatar-country", false) + "\n";
@@ -468,7 +470,10 @@ function main() {
             break;
         case "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action":
         case "https://nsat.collegeboard.org/satweb/registration/viewTestAndDateAction.action":
-            if (GM_getValue("cbsatar-dates", false)) {
+            if (document.referrer == "https://nsat.collegeboard.org/satweb/satHomeAction.action" && GM_getValue("cbsatar-selectDate", false)) {
+                document.getElementById("continue").click();
+            }
+            else if (GM_getValue("cbsatar-dates", false)) {
                 if (document.getElementsByClassName("s2-well-text-block").length != 0) {
                     if (document.getElementsByClassName("s2-well-text-block")[0].innerText.search("There are no available registration dates for the current test year. Please check back later to register for future tests.") != -1) {
                         countdown(30, document.getElementsByClassName("s2-well-text-block")[0], "No registration date available")
