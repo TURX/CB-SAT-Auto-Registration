@@ -32,9 +32,12 @@ Features
 Basic Usage
 ---
 1. Use [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) on Chromium-based browsers (e.g. Chrome on PCs and Yandex Browser Beta on Android devices) to load the content in [front.js](front.js);
-2. Grant sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ (or the plugin would get stuck);
-3. Go to https://nsat.collegeboard.org/satweb/satHomeAction.action, sign in, and click *Auto Registration Settings*;
-4. Answer the questions to enable the features you need.
+2. Allow the plugin to access the host (localhost by default);
+3. Grant sound permissions for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ (or the plugin would get stuck);
+4. Go to https://nsat.collegeboard.org/satweb/satHomeAction.action, sign in, and click *Auto Registration Settings*;
+5. Answer the questions to enable the features you need.
+
+![Host](img/connect.png)
 
 ![Settings](img/settings.png)
 

@@ -5,7 +5,7 @@ import threading
 from playsound import playsound
 
 host = ("0.0.0.0", 8080)
-versionNum = "32"
+versionNum = "33"
 soundPlayCount = -1
 soundPlayStop = False
 soundPlaying = False
@@ -15,7 +15,9 @@ visitCount = 0
 errorCount = 0
 noError = 0
 
-def play():
+def play(file):
+    if (file == None):
+        file = "se_ymd05.wav"
     global soundPlayStop, soundPlaying, soundPlayCount
     while (soundPlayStop == False):
         if (soundPlayCount > 0):
@@ -23,22 +25,24 @@ def play():
         elif (soundPlayCount == 0):
             break
         log("sound play for one time")
-        playsound("res/se_ymd05.wav")
+        playsound("res/" + file)
     soundPlayStop = True
     soundPlaying = False
 
 def log(str):
     print("[College Board SAT Auto Registration] " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str)
 
+soundPlayThread = threading.Thread(target=play, args=("se_ymd05.wav",))
+
 def idle():
-    global soundPlaying, soundPlayCount, soundPlayStop, soundForIdle
+    global soundPlaying, soundPlayCount, soundPlayStop, soundForIdle, soundPlayThread
     log("event: idle")
     soundForIdle = True
     if (soundPlaying == False):
         soundPlayCount = -1
         soundPlayStop = False
         soundPlaying = True
-        soundPlayThread = threading.Thread(target=play, args=())
+        soundPlayThread = threading.Thread(target=play, args=("se_ymd05.wav",))
         soundPlayThread.start()
     else:
         soundPlayCount = -1
@@ -47,7 +51,7 @@ timerIdle = threading.Timer(60.0, idle)
 
 class Request(BaseHTTPRequestHandler):
     def do_GET(self):
-        global soundPlayStop, soundPlaying, soundPlayCount, lastUrl, visitCount, errorCount, noError, timerIdle, soundForIdle
+        global soundPlayStop, soundPlaying, soundPlayCount, lastUrl, visitCount, errorCount, noError, timerIdle, soundForIdle, soundPlayThread
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-type", "application/json")
@@ -55,7 +59,7 @@ class Request(BaseHTTPRequestHandler):
         urlInfo = urllib.parse.urlparse(self.path)
         path = urlInfo.path
         query = urllib.parse.parse_qs(urlInfo.query)
-        if (path == "/startPlay") or (path == "/stopPlay") or (path == "/visit") or (path == "/errorHandler") or (path == "/log"):
+        if (path == "/startPlay") or (path == "/stopPlay") or (path == "/visit") or (path == "/errorHandler") or (path == "/log") or (path == "/test"):
             self.send_response(200)
             if (soundForIdle == True):
                 soundForIdle = False
@@ -75,20 +79,21 @@ class Request(BaseHTTPRequestHandler):
                 log("reason: " + query.get("reason")[0])
             if (query.get("count")):
                 log("count: " + query.get("count")[0])
-            if (soundPlaying == False):
-                if (query.get("count")):
-                    soundPlayCount = int(query.get("count")[0])
-                else:
-                    soundPlayCount = -1
-                soundPlayStop = False
-                soundPlaying = True
-                soundPlayThread = threading.Thread(target=play, args=())
-                soundPlayThread.start()
+            if (query.get("file")):
+                file = query.get("file")[0]
             else:
-                if (query.get("count")):
-                    soundPlayCount = int(query.get("count")[0])
-                else:
-                    soundPlayCount = -1
+                file = "se_ymd05.wav"
+            if (query.get("count")):
+                soundPlayCount = int(query.get("count")[0])
+            else:
+                soundPlayCount = -1
+            while (soundPlayThread.is_alive()):
+                soundPlayStop = True
+                soundPlaying = False
+            soundPlayStop = False
+            soundPlaying = True
+            soundPlayThread = threading.Thread(target=play, args=(file,))
+            soundPlayThread.start()
             responseBody = "completed"
         elif path == "/stopPlay":
             soundPlayStop = True
@@ -126,6 +131,8 @@ class Request(BaseHTTPRequestHandler):
                 log("url: " + query.get("url")[0])
             if (query.get("content")):
                 log("content: " + query.get("content")[0])
+            responseBody = "completed"
+        elif path == "/test":
             responseBody = "completed"
         self.wfile.write(responseBody.encode("utf-8"))
         log("respond to frontend")
