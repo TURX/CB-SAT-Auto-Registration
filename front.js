@@ -14,7 +14,7 @@
 // @run-at       document-idle
 // @supportURL   https://github.com/TURX/CB-SAT-Auto-Registration/issues
 // @updateURL    https://raw.githubusercontent.com/TURX/CB-SAT-Auto-Registration/master/front.js
-// @version      33
+// @version      34
 // ==/UserScript==
 
 var url;
@@ -46,13 +46,6 @@ function log(content) {
 
 function logp(content) {
     console.log(content);
-    var promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/log", {
-        "url": url,
-        "content": content
-    });
-    promise.catch((e) => {
-        console.log("Backend log error: " + e);
-    });
 }
 
 function countdown(timeoutReload, element, desc, url) {

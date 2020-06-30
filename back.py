@@ -1,11 +1,19 @@
+import os
+import signal
+import sys
+import threading
 import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import threading
 from playsound import playsound
 
+# Variables
+
 host = ("0.0.0.0", 8080)
-versionNum = "33"
+versionNum = "34"
+
+# Constants
+
 soundPlayCount = -1
 soundPlayStop = False
 soundPlaying = False
@@ -14,6 +22,7 @@ lastUrl = ""
 visitCount = 0
 errorCount = 0
 noError = 0
+serverRunning = True
 
 def play(file):
     if (file == None):
@@ -29,8 +38,16 @@ def play(file):
     soundPlayStop = True
     soundPlaying = False
 
-def log(str):
+def logToFile(str):
+    with open("cbsatar.log", "a") as logFile:
+        logFile.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str + "\n")
+
+def logToConsole(str):
     print("[College Board SAT Auto Registration] " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str)
+
+def log(str):
+    logToConsole(str)
+    logToFile(str)
 
 soundPlayThread = threading.Thread(target=play, args=("se_ymd05.wav",))
 
@@ -139,9 +156,37 @@ class Request(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
 
-if __name__ == "__main__":
+def getSlash():
+    if (os.name == "nt"):
+        return "\\"
+    else:
+        return "/"
+
+server = HTTPServer(host, Request)
+
+def runServer():
+    global serverRunning
+    while (serverRunning == True):
+        server.handle_request()
+
+serverThread = threading.Thread(target=runServer, args=())
+
+def interruptHandler(sig, frame):
+    global serverRunning
+    logToFile("Interrupted by user.")
+    print("Shutting down...")
+    serverRunning = False
+    sys.exit(0)
+
+interruptHandlerThread = threading.Thread(target=signal.signal, args=(signal.SIGINT, interruptHandler,))
+
+if (__name__ == "__main__"):
     print("College Board SAT Auto Registration Backend Ver. " + versionNum +
           "\n\nCopyright (C) 2020  TURX\nThis program comes with ABSOLUTELY NO WARRANTY with GNU GPL v3 license. This is free software, and you are welcome to redistribute it under certain conditions; go to https://www.gnu.org/licenses/gpl-3.0.html for details.\n")
-    server = HTTPServer(host, Request)
+    open("cbsatar.log", "w").close()
+    print("Starting log, write to: " + os.getcwd() + getSlash() + "cbsatar.log")
+    print("Starting interrupt handler, you can press Ctrl+C or send SIGINT to exit")
+    signal.signal(signal.SIGINT, interruptHandler)
+    serverThread.start()
     print("Starting server, listen at: %s:%s" % host)
-    server.serve_forever()
+    logToFile("Service started.")
