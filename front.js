@@ -14,7 +14,7 @@
 // @run-at       document-idle
 // @supportURL   https://github.com/TURX/CB-SAT-Auto-Registration/issues
 // @updateURL    https://raw.githubusercontent.com/TURX/CB-SAT-Auto-Registration/master/front.js
-// @version      34
+// @version      35
 // ==/UserScript==
 
 var url;
@@ -286,7 +286,16 @@ function startSettings() {
         GM_setValue("cbsatar-personalInfo", confirm("Do you want to skip filling the personal information?"));
         GM_setValue("cbsatar-terms", confirm("Do you want to automatically accept the terms?"));
         GM_setValue("cbsatar-brute", confirm("Do you want a brute mode (no refresh interval)?"));
-        GM_setValue("cbsatar-dates", confirm("Do you want to automaically check if any registration date is available?"));
+        GM_setValue("cbsatar-autoDate", confirm("Do you want to automaically select a date?"));
+        if (GM_getValue("cbsatar-autoDate", false)) {
+            GM_setValue("cbsatar-preferDate", prompt("Please fill the year and the month of administration using YYYYMM format:\nFor example, 202012 for December 2020", GM_getValue("cbsatar-preferDate", "")));
+            GM_setValue("cbsatar-date-essay", confirm("Do you want to register SAT essay?"));
+            GM_setValue("cbsatar-date-feeWaiver", confirm("Do you have a fee waiver?"));
+            GM_setValue("cbsatar-date-sas", confirm("Do you need the student answer service?"));
+            GM_setValue("cbsatar-dates", false);
+        } else {
+            GM_setValue("cbsatar-dates", confirm("Do you want to automaically check if any registration date is available?"));
+        }
         GM_setValue("cbsatar-selectDate", confirm("Do you want to automaically select the set date when continuing registration?"));
         GM_setValue("cbsatar-prefer", confirm("Do you prefer a new test center?"));
         if (GM_getValue("cbsatar-prefer", true)) {
@@ -337,8 +346,9 @@ function startSettings() {
         review += "Skip personal information: " + GM_getValue("cbsatar-personalInfo", false) + "\n";
         review += "Skip terms: " + GM_getValue("cbsatar-terms", false) + "\n";
         review += "Brute mode: " + GM_getValue("cbsatar-brute", false) + "\n";
+        review += "Auto select date: " + GM_getValue("cbsatar-autoDate", false) + "\n";
         review += "Check dates: " + GM_getValue("cbsatar-dates", false) + "\n";
-        review += "Auto select date: " + GM_getValue("cbsatar-selectDate", false) + "\n";
+        review += "Auto select set date: " + GM_getValue("cbsatar-selectDate", false) + "\n";
         review += "Auto select test center: " + GM_getValue("cbsatar-tcselect", false) + "\n";
         review += "Prefer a new test center: " + GM_getValue("cbsatar-prefer", true) + "\n";
         review += "Auto select country: " + GM_getValue("cbsatar-country", false) + "\n";
@@ -358,6 +368,9 @@ function startSettings() {
         review += "Expire month: " + GM_getValue("cbsatar-expireMonth", 0) + "\n";
         review += "Expire year: " + GM_getValue("cbsatar-expireYear", 0) + "\n";
         review += "Security code: " + GM_getValue("cbsatar-securityCode", "") + "\n";
+        review += "SAT essay: " + GM_getValue("cbsatar-date-essay", false) + "\n";
+        review += "Fee waiver: " + GM_getValue("cbsatar-date-feeWaiver", false) + "\n";
+        review += "Student answer service: " + GM_getValue("cbsatar-date-sas", false) + "\n";
         review += "Auto refresh when down: " + GM_getValue("cbsatar-down", false) + "\n";
         review += "Backend host: " + GM_getValue("cbsatar-backend", "localhost");
         console.log(review);
@@ -373,6 +386,21 @@ function terminatePlay() {
             log("Backend stopPlay error: " + e);
         });
     }
+}
+
+function dateCheckOtherComponents() {
+    if (GM_getValue("cbsatar-date-essay", false))
+        document.getElementById("essayAddOnYes").checked = true;
+    else
+        document.getElementById("essayAddOnNo").checked = true;
+    if (GM_getValue("cbsatar-date-feeWaiver", false))
+        document.getElementById("feeWaiverYes").checked = true;
+    else
+        document.getElementById("feeWaiverNo").checked = true;
+    if (GM_getValue("cbsatar-date-sas", false))
+        document.getElementById("optBuySAS").checked = true;
+    else
+        document.getElementById("optDeclineSAS").checked = true;
 }
 
 function main() {
@@ -450,7 +478,6 @@ function main() {
             if (GM_getValue("cbsatar-start", false)) {
                 log("Go to the next step.");
                 if (typeof newRegistration == "function") newRegistration('', 'initRegistration', '');
-                document.getElementById("continue").click();
             }
             break;
         case "https://nsat.collegeboard.org/satweb/registration/viewSatTicketID.action":
@@ -484,6 +511,21 @@ function main() {
                     } else {
                         notify("Registration date available.", true, true, true, true);
                     }
+                }
+            } else if (GM_getValue("cbsatar-autoDate", false)) {
+                var foundDate = false;
+                document.getElementsByName("selectedTestAdminYYYYMM").forEach((v) => {
+                    if (v.value == GM_getValue("cbsatar-preferDate", "")) {
+                        foundDate = true;
+                        v.checked = true;
+                    }
+                });
+                if (foundDate) {
+                    notify("Preferred date is available.", true, false, true, true);
+                    dateCheckOtherComponents();
+                    document.getElementById("continue").click();
+                } else {
+                    countdown(15, document.getElementById("testRegistrationHeader"), "The preferred date is not available");
                 }
             }
             break;

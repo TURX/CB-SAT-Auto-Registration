@@ -14,7 +14,7 @@ Features
 - Accept the terms
 - Brute mode with no refresh interval
 - Check if any registration date is available
-- Select the date for only once
+- Auto select a date
 - Select a country from the dropdown menu
 - Notify for a test center with condition
 - Select a test center and go to the payment page
