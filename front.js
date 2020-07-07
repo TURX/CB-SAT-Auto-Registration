@@ -14,7 +14,7 @@
 // @run-at       document-idle
 // @supportURL   https://github.com/TURX/CB-SAT-Auto-Registration/issues
 // @updateURL    https://raw.githubusercontent.com/TURX/CB-SAT-Auto-Registration/master/front.js
-// @version      35
+// @version      36
 // ==/UserScript==
 
 var url;
@@ -245,7 +245,7 @@ async function heldWarning() {
     } else if (document.getElementById("seatHeldFor-warning").innerText == "Your test center selection has been reserved. You have five minutes to complete your registration. After five minutes, your test center reservation will be released and you will be required to re-select a test center.") {
         await notify("You have less than 5 minutes to finish the registration.", true, false, true, true);
     } else {
-        await notify(document.getElementById("seatHeldFor-warning").innerText, true, false, true);
+        await notify(document.getElementById("seatHeldFor-warning").innerText, true, false, true, true);
     }
 }
 
@@ -289,9 +289,14 @@ function startSettings() {
         GM_setValue("cbsatar-autoDate", confirm("Do you want to automaically select a date?"));
         if (GM_getValue("cbsatar-autoDate", false)) {
             GM_setValue("cbsatar-preferDate", prompt("Please fill the year and the month of administration using YYYYMM format:\nFor example, 202012 for December 2020", GM_getValue("cbsatar-preferDate", "")));
-            GM_setValue("cbsatar-date-essay", confirm("Do you want to register SAT essay?"));
+            GM_setValue("cbsatar-subject", confirm("Do you want to register SAT Subject Tests?"));
+            if (GM_getValue("cbsatar-subject", false)) {
+                GM_setValue("cbsatar-subjectSelect", prompt("Please fill in all the subjects you want to take (up to three) using one space to seperate:\nFor example, you can fill mathLevelTwo physics\n\nAvailable choices: mathLevelOne, mathLevelTwo, chemistry, physics, biology, usHistory, worldHistory, literature, french, german, modernHebrew, spanish, italian, latin, frenchWithListening, germanWithListening, spanishWithListening, chineseWithListening, koreanWithListening, japaneseWithListening"));
+            } else {
+                GM_setValue("cbsatar-date-essay", confirm("Do you want to register SAT essay?"));
+                GM_setValue("cbsatar-date-sas", confirm("Do you need the student answer service?"));
+            }
             GM_setValue("cbsatar-date-feeWaiver", confirm("Do you have a fee waiver?"));
-            GM_setValue("cbsatar-date-sas", confirm("Do you need the student answer service?"));
             GM_setValue("cbsatar-dates", false);
         } else {
             GM_setValue("cbsatar-dates", confirm("Do you want to automaically check if any registration date is available?"));
@@ -320,6 +325,9 @@ function startSettings() {
         }
         GM_setValue("cbsatar-photo", confirm("Do you want to skip uploading a new photo?"));
         GM_setValue("cbsatar-practice", confirm("Do you want to skip buying practice materials?"));
+        GM_setValue("cbsatar-pay", false);
+        GM_setValue("cbsatar-held", confirm("Do you want to be notified during the seat is held?"));
+        /*
         GM_setValue("cbsatar-pay", confirm("Do you want to automatically pay for the test?"));
         if (GM_getValue("cbsatar-pay", false)) {
             GM_setValue("cbsatar-held", false);
@@ -332,6 +340,7 @@ function startSettings() {
         } else {
             GM_setValue("cbsatar-held", confirm("Do you want to be notified during the seat is held?"));
         }
+        */
         GM_setValue("cbsatar-down", confirm("Do you want to automaically refresh when the website is down?"));
         GM_setValue("cbsatar-backend", prompt("Please fill the host for the backend:\nlocalhost: for no backend or backend on this PC", GM_getValue("cbsatar-backend", "localhost")))
         notify("You are set for main page if you have the sound permission allowed.", false, true, false, false);
@@ -357,20 +366,24 @@ function startSettings() {
         review += "Condition: " + GM_getValue("cbsatar-preferSelect", "None") + "\n";
         review += "Auto find seat: " + GM_getValue("cbsatar-seats", false) + "\n";
         review += "Skip practice materials: " + GM_getValue("cbsatar-practice", false) + "\n";
-        review += "Auto pay: " + GM_getValue("cbsatar-pay", false) + "\n";
+        // review += "Auto pay: " + GM_getValue("cbsatar-pay", false) + "\n";
         review += "Notify when held: " + GM_getValue("cbsatar-held", false) + "\n";
         console.log(review);
         alert(review);
         review = "Settings - College Board SAT Auto Registration (Page 2/2)\n\n";
+        /*
         review += "Address 1: " + GM_getValue("cbsatar-address1", "") + "\n";
         review += "Card type: " + GM_getValue("cbsatar-cardType", 3) + "\n";
         review += "Card number: " + GM_getValue("cbsatar-cardNum", "") + "\n";
         review += "Expire month: " + GM_getValue("cbsatar-expireMonth", 0) + "\n";
         review += "Expire year: " + GM_getValue("cbsatar-expireYear", 0) + "\n";
         review += "Security code: " + GM_getValue("cbsatar-securityCode", "") + "\n";
+        */
         review += "SAT essay: " + GM_getValue("cbsatar-date-essay", false) + "\n";
         review += "Fee waiver: " + GM_getValue("cbsatar-date-feeWaiver", false) + "\n";
         review += "Student answer service: " + GM_getValue("cbsatar-date-sas", false) + "\n";
+        review += "SAT Subject Tests: " + GM_getValue("cbsatar-subject", false) + "\n";
+        review += "Selected subjects: " + GM_getValue("cbsatar-subjectSelect", "") + "\n";
         review += "Auto refresh when down: " + GM_getValue("cbsatar-down", false) + "\n";
         review += "Backend host: " + GM_getValue("cbsatar-backend", "localhost");
         console.log(review);
@@ -403,7 +416,7 @@ function dateCheckOtherComponents() {
         document.getElementById("optDeclineSAS").checked = true;
 }
 
-function main() {
+async function main() {
     var error = false;
     log("Enabled, current URL: " + url);
 
@@ -475,9 +488,16 @@ function main() {
             }
             break;
         case "https://nsat.collegeboard.org/satweb/processMySatAction.action":
-            if (GM_getValue("cbsatar-start", false)) {
-                log("Go to the next step.");
-                if (typeof newRegistration == "function") newRegistration('', 'initRegistration', '');
+            if (document.getElementsByClassName("s2-h2").length == 0) {
+                if (GM_getValue("cbsatar-start", false)) {
+                    log("Go to the next step.");
+                    if (typeof newRegistration == "function") newRegistration('', 'initRegistration', '');
+                }
+            } else {
+                if (GM_getValue("cbsatar-personalInfo", false)) {
+                    log("Go to the next step.");
+                    document.getElementById("continue").click();
+                }
             }
             break;
         case "https://nsat.collegeboard.org/satweb/registration/viewSatTicketID.action":
@@ -513,19 +533,42 @@ function main() {
                     }
                 }
             } else if (GM_getValue("cbsatar-autoDate", false)) {
-                var foundDate = false;
-                document.getElementsByName("selectedTestAdminYYYYMM").forEach((v) => {
-                    if (v.value == GM_getValue("cbsatar-preferDate", "")) {
-                        foundDate = true;
-                        v.checked = true;
+                if (GM_getValue("cbsatar-subject", false)) {
+                    document.getElementById("testTypeSubjects").click();
+                    while (document.getElementsByClassName("regAdmin s2-tab-link").length == 0) {
+                        await new Promise(r => setTimeout(r, 500));
                     }
-                });
-                if (foundDate) {
-                    notify("Preferred date is available.", true, false, true, true);
-                    dateCheckOtherComponents();
-                    document.getElementById("continue").click();
+                    if (document.getElementById("testDateTab_" + GM_getValue("cbsatar-preferDate", ""))) {
+                        document.getElementById("testDateTab_" + GM_getValue("cbsatar-preferDate", "")).children[0].click();
+                        notify("Preferred date is available.", true, false, true, true);
+                        await new Promise(r => setTimeout(r, 500));
+                        var selectedSubjects = GM_getValue("cbsatar-subjectSelect", "").split(" ");
+                        selectedSubjects.forEach(id => {
+                            document.getElementById(id).click();
+                        });
+                        if (GM_getValue("cbsatar-date-feeWaiver", false))
+                            document.getElementById("feeWaiverYes").checked = true;
+                        else
+                            document.getElementById("feeWaiverNo").checked = true;
+                        document.getElementById("continue").click();
+                    } else {
+                        countdown(15, document.getElementById("testDateAndAvailability"), "The preferred date is not available");
+                    }
                 } else {
-                    countdown(15, document.getElementById("testRegistrationHeader"), "The preferred date is not available");
+                    var foundDate = false;
+                    document.getElementsByName("selectedTestAdminYYYYMM").forEach((v) => {
+                        if (v.value == GM_getValue("cbsatar-preferDate", "")) {
+                            foundDate = true;
+                            v.checked = true;
+                        }
+                    });
+                    if (foundDate) {
+                        notify("Preferred date is available.", true, false, true, true);
+                        dateCheckOtherComponents();
+                        document.getElementById("continue").click();
+                    } else {
+                        countdown(15, document.getElementById("testRegistrationHeader"), "The preferred date is not available");
+                    }
                 }
             }
             break;

@@ -10,7 +10,7 @@ from playsound import playsound
 # Variables
 
 host = ("0.0.0.0", 8080)
-versionNum = "35"
+versionNum = "36"
 
 # Constants
 
@@ -177,8 +177,6 @@ def interruptHandler(sig, frame):
     print("Shutting down...")
     serverRunning = False
     sys.exit(0)
-
-interruptHandlerThread = threading.Thread(target=signal.signal, args=(signal.SIGINT, interruptHandler,))
 
 if (__name__ == "__main__"):
     print("College Board SAT Auto Registration Backend Ver. " + versionNum +

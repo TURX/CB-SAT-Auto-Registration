@@ -6,6 +6,8 @@ SAT is a registered trademark of the College Board, and this project is not affl
 
 This plugin currently only supports international registration, but it can be easily adapted for test centers within the U.S.
 
+Current version: 36
+
 Features
 ---
 - Continue to fill the personal information from the initial page
@@ -22,12 +24,13 @@ Features
 - Skip uploading of new photo
 - Skip buying practice materials
 - Notify you during the seat is being held
-- Auto pay for the new test using a credit card
+- Auto pay for the new test using a credit card (disabled, to fix)
 - Refresh when the website is down
 - Notify using sound with no jam (backend needed)
 - Handle errors intelligently (backend needed)
 - Log the status (backend needed)
 - Notify when idle
+- Support SAT, SAT essay, SAT Subject Tests, fee waiver, and student answer service
 
 Basic Usage
 ---
