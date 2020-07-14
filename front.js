@@ -14,7 +14,7 @@
 // @run-at       document-idle
 // @supportURL   https://github.com/TURX/CB-SAT-Auto-Registration/issues
 // @updateURL    https://raw.githubusercontent.com/TURX/CB-SAT-Auto-Registration/master/front.js
-// @version      36
+// @version      37
 // ==/UserScript==
 
 var url;
@@ -224,6 +224,29 @@ function selectItemByText(element, text) {
     }
 }
 
+var preferSelectId;
+
+function findTestCenter() {
+    logp(document.getElementById("testCenterSearchResults_wrapper").innerText);
+    if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
+        if (GM_getValue("cbsatar-enable-preferSelect", false) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
+            if (document.getElementsByTagName("tr").length > 1) {
+                for (i = 1; i < document.getElementsByTagName("tr").length; i++) {
+                    if (document.getElementsByTagName("tr")[i].children[1].innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
+                        if (document.getElementsByTagName("tr")[i].children[2].innerText.search("Seat Available") != -1) {
+                            preferSelectId = document.getElementsByTagName("tr")[1].children[3].getElementsByTagName("a")[0].id;
+                            return true;
+                        }
+                    }
+                }
+            }
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+
 async function selectCenter() {
     await notify("Seat available.", true, false, true, true);
     while (document.getElementsByClassName("selectCenter").length == 0) {
@@ -232,6 +255,12 @@ async function selectCenter() {
     document.getElementsByClassName("selectCenter")[0].click();
     document.getElementById("modalOKBtn").click();
     // document.getElementById("id-messageRegEPIStudy-yes-button").click();
+}
+
+async function selectCenterById(id) {
+    await notify("Seat available.", true, false, true, true);
+    document.getElementById(id).click();
+    document.getElementById("modalOKBtn").click();
 }
 
 async function confirmCenter() {
@@ -291,7 +320,7 @@ function startSettings() {
             GM_setValue("cbsatar-preferDate", prompt("Please fill the year and the month of administration using YYYYMM format:\nFor example, 202012 for December 2020", GM_getValue("cbsatar-preferDate", "")));
             GM_setValue("cbsatar-subject", confirm("Do you want to register SAT Subject Tests?"));
             if (GM_getValue("cbsatar-subject", false)) {
-                GM_setValue("cbsatar-subjectSelect", prompt("Please fill in all the subjects you want to take (up to three) using one space to seperate:\nFor example, you can fill mathLevelTwo physics\n\nAvailable choices: mathLevelOne, mathLevelTwo, chemistry, physics, biology, usHistory, worldHistory, literature, french, german, modernHebrew, spanish, italian, latin, frenchWithListening, germanWithListening, spanishWithListening, chineseWithListening, koreanWithListening, japaneseWithListening"));
+                GM_setValue("cbsatar-subjectSelect", prompt("Please fill in all the subjects you want to take (up to three) using one space to seperate:\nFor example, you can fill mathLevelTwo physics\n\nAvailable choices: mathLevelOne, mathLevelTwo, chemistry, physics, biology, usHistory, worldHistory, literature, french, german, modernHebrew, spanish, italian, latin, frenchWithListening, germanWithListening, spanishWithListening, chineseWithListening, koreanWithListening, japaneseWithListening", GM_getValue("cbsatar-subjectSelect", false)));
             } else {
                 GM_setValue("cbsatar-date-essay", confirm("Do you want to register SAT essay?"));
                 GM_setValue("cbsatar-date-sas", confirm("Do you need the student answer service?"));
@@ -310,14 +339,11 @@ function startSettings() {
             } else {
                 GM_setValue("cbsatar-countryName", "None");
             }
-            GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add more condition for search result tables?"));
+            GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add more condition for the address of the test center?"));
             if (GM_getValue("cbsatar-enable-preferSelect", false)) {
                 GM_setValue("cbsatar-preferSelect", prompt("What condition do you need more?\nFor example: BANGKOK.", GM_getValue("cbsatar-preferSelect", "BANGKOK")));
-                GM_setValue("cbsatar-tcselect", false);
-            } else {
-                GM_setValue("cbsatar-tcselect", confirm("Do you want to skip selecting a test center and go to the next page?"));
-                GM_setValue("cbsatar-preferSelect", "None");
             }
+            GM_setValue("cbsatar-tcselect", confirm("Do you want to skip selecting a test center and go to the next page?"));
             GM_setValue("cbsatar-seats", confirm("Do you want to automaically check if any seat is available in the region you selected?"));
         } else {
             GM_setValue("cbsatar-enable-preferSelect", false);
@@ -363,7 +389,7 @@ function startSettings() {
         review += "Auto select country: " + GM_getValue("cbsatar-country", false) + "\n";
         review += "Country name: " + GM_getValue("cbsatar-countryName", "None") + "\n";
         review += "Conditioned Selection: " + GM_getValue("cbsatar-enable-preferSelect", false) + "\n";
-        review += "Condition: " + GM_getValue("cbsatar-preferSelect", "None") + "\n";
+        review += "Address Condition: " + GM_getValue("cbsatar-preferSelect", "None") + "\n";
         review += "Auto find seat: " + GM_getValue("cbsatar-seats", false) + "\n";
         review += "Skip practice materials: " + GM_getValue("cbsatar-practice", false) + "\n";
         // review += "Auto pay: " + GM_getValue("cbsatar-pay", false) + "\n";
@@ -605,51 +631,18 @@ async function main() {
                                 }
                             }
                             log("Finding seat...");
+                            var seatAvailable = false;
                             if (document.getElementById("testCenterSearchResults_wrapper") != null) {
-                                var tdTags, searchText, found;
-                                var seatAvailable = false;
                                 log("Test Center Information:");
                                 while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
-                                    logp(document.getElementById("testCenterSearchResults_wrapper").innerText);
-                                    if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
-                                        if (GM_getValue("cbsatar-enable-preferSelect", false) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
-                                            tdTags = document.getElementsByTagName("td");
-                                            searchText = GM_getValue("cbsatar-preferSelect", "BANGKOK");
-                                            found;
-                                            for (i = 0; i < tdTags.length; i++) {
-                                                if (tdTags[i].innerText.search(searchText) != -1) {
-                                                    found = tdTags[i];
-                                                    if ($(found).closest('td').next('td').text() == "Seat Available") {
-                                                        seatAvailable = true;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        } else {
-                                            seatAvailable = true;
-                                            break;
-                                        }
+                                    if (findTestCenter() == true) {
+                                        seatAvailable = true;
+                                        break;
                                     }
                                     document.getElementById("testCenterSearchResults_next").click();
                                 }
-                                console.log(document.getElementById("testCenterSearchResults_wrapper").innerText);
-                                if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
-                                    if (GM_getValue("cbsatar-enable-preferSelect", false) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
-                                        log("Prefer Select: " + GM_getValue("cbsatar-preferSelect", "BANGKOK"));
-                                        tdTags = document.getElementsByTagName("td");
-                                        searchText = GM_getValue("cbsatar-preferSelect", "BANGKOK");
-                                        found;
-                                        for (i = 0; i < tdTags.length; i++) {
-                                            if (tdTags[i].innerText.search(searchText) != -1) {
-                                                found = tdTags[i];
-                                                if ($(found).closest('td').next('td').text() == "Seat Available") {
-                                                    seatAvailable = true;
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        seatAvailable = true;
-                                    }
+                                if (findTestCenter() == true) {
+                                    seatAvailable = true;
                                 }
                                 if (!seatAvailable) {
                                     if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("My Ideal Test Center") == -1) {
@@ -675,7 +668,13 @@ async function main() {
                                         }
                                     }
                                 } else {
-                                    if (GM_getValue("cbsatar-tcselect", false)) selectCenter();
+                                    if (GM_getValue("cbsatar-tcselect", false)) {
+                                        if (GM_getValue("cbsatar-enable-preferSelect", false)) {
+                                            selectCenterById(preferSelectId);
+                                        } else {
+                                            selectCenter();
+                                        }
+                                    }
                                     else notify("Seat available.", true, true, true, true);
                                 }
                             } else {

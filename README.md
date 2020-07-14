@@ -6,7 +6,7 @@ SAT is a registered trademark of the College Board, and this project is not affl
 
 This plugin currently only supports international registration, but it can be easily adapted for test centers within the U.S.
 
-Current version: 36
+Current version: 37
 
 Features
 ---
@@ -18,7 +18,7 @@ Features
 - Check if any registration date is available
 - Auto select a date
 - Select a country from the dropdown menu
-- Notify for a test center with condition
+- Search for a better test center with certain address
 - Select a test center and go to the payment page
 - Check if any seat is available in the region you selected
 - Skip uploading of new photo
