@@ -14,10 +14,10 @@
 // @run-at       document-idle
 // @supportURL   https://github.com/TURX/CB-SAT-Auto-Registration/issues
 // @updateURL    https://raw.githubusercontent.com/TURX/CB-SAT-Auto-Registration/master/front.js
-// @version      37
+// @version      38
 // ==/UserScript==
 
-var url;
+var url, path;
 
 function getIfMobile() {
     var sUserAgent = navigator.userAgent;
@@ -494,8 +494,8 @@ async function main() {
         }, 60000);
     }
 
-    if (!error) switch (url) {
-        case "https://account.collegeboard.org/login/login":
+    if (!error) switch (path) {
+        case "login":
             if (GM_getValue("cbsatar-login", false)) {
                 log("Login.");
                 document.getElementById("username").value = GM_getValue("cbsatar-username", "");
@@ -506,14 +506,14 @@ async function main() {
                 document.getElementsByClassName("btn")[0].click();
             }
             break;
-        case "https://account.collegeboard.org/login/authenticateUser":
+        case "authenticateUser":
             if (GM_getValue("cbsatar-login", false)) {
                 if (document.getElementsByClassName("cb-error-msg").length > 0) {
                     notify("The login information is invalid.", true, true, false, false);
                 }
             }
             break;
-        case "https://nsat.collegeboard.org/satweb/processMySatAction.action":
+        case "processMySatAction.action":
             if (document.getElementsByClassName("s2-h2").length == 0) {
                 if (GM_getValue("cbsatar-start", false)) {
                     log("Go to the next step.");
@@ -526,27 +526,27 @@ async function main() {
                 }
             }
             break;
-        case "https://nsat.collegeboard.org/satweb/registration/viewSatTicketID.action":
+        case "viewSatTicketID.action":
             if (GM_getValue("cbsatar-personalInfo", false)) {
                 log("Go to the next step.");
                 document.getElementById("continue").click();
             }
             break;
-        case "https://nsat.collegeboard.org/satweb/registration/sdqDemographics.action":
+        case "sdqDemographics.action":
             if (GM_getValue("cbsatar-personalInfo", false)) {
                 log("Skip to the next step.");
                 document.getElementById("updateLater").click();
             }
             break;
-        case "https://nsat.collegeboard.org/satweb/registration/viewSatTermsAndConditions.action":
+        case "viewSatTermsAndConditions.action":
             if (GM_getValue("cbsatar-terms", false)) {
                 log("Check to agree the terms and go to the next step.");
                 document.getElementById("agreeTerms").click();
                 document.getElementById("continue").click();
             }
             break;
-        case "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action":
-        case "https://nsat.collegeboard.org/satweb/registration/viewTestAndDateAction.action":
+        case "acceptSatTermsAndConditions.action":
+        case "viewTestAndDateAction.action":
             if (document.referrer == "https://nsat.collegeboard.org/satweb/satHomeAction.action" && GM_getValue("cbsatar-selectDate", false)) {
                 document.getElementById("continue").click();
             }
@@ -598,8 +598,9 @@ async function main() {
                 }
             }
             break;
-        case "https://nsat.collegeboard.org/satweb/registration/updateTestAndDateAction.action":
-        case "https://nsat.collegeboard.org/satweb/registration/selectTestCenterAction.action":
+        case "submitChangeRegistration.action":
+        case "updateTestAndDateAction.action":
+        case "selectTestCenterAction.action":
             if (document.getElementsByClassName("s2-h2")[1] != null) {
                 if (document.getElementsByClassName("s2-h2")[1].innerText == "Your Test Center") {
                     if (!GM_getValue("cbsatar-prefer", true)) {
@@ -704,13 +705,13 @@ async function main() {
                 }
             }
             break;
-        case "https://nsat.collegeboard.org/satweb/registration/commitPhotoSelectionAction.action":
+        case "commitPhotoSelectionAction.action":
             if (GM_getValue("cbsatar-practice", false)) {
                 document.getElementById("continue").click();
             }
             break;
-        case "https://nsat.collegeboard.org/satweb/registration/selectPractice.action":
-        case "https://nsat.collegeboard.org/satweb/registration/completeRegistrationCCAction.action":
+        case "selectPractice.action":
+        case "completeRegistrationCCAction.action":
             if (GM_getValue("cbsatar-pay", false)) {
                 document.getElementById("continue").click();
                 document.getElementById("confirmRegAgreeCheckbox").click();
@@ -725,51 +726,53 @@ async function main() {
                 }
             }
             break;
-        case "https://nsat.collegeboard.org/errors/down.html":
+        case "down.html":
             if (GM_getValue("cbsatar-down", false)) {
                 countdown(30, document.getElementsByClassName("cb-alert-heading")[0].getElementsByTagName("p")[0], "Website down", "https://nsat.collegeboard.org/satweb/satHomeAction.action");
             }
             break;
-        case "https://pps.collegeboard.org/":
-            setTimeout(function() {
-                if (document.getElementsByTagName("h2")[0] != null) {
-                    if (document.getElementsByTagName("h2")[0].innerText == "Session has timed out") {
-                        timeoutBack();
-                    }
-                    if (document.getElementsByTagName("h2")[0].innerText == "Make a Payment") {
-                        if (window.location.search.length == 0) {
-                            notify("You are set for payment page if you have the sound permission allowed.", false, true, false, false);
-                        } else {
-                            notify("The payment is invalid.", true, true, false, true);
-                            history.back(-1);
+        case "":
+            if (url == "https://pps.collegeboard.org/") {
+                setTimeout(function() {
+                    if (document.getElementsByTagName("h2")[0] != null) {
+                        if (document.getElementsByTagName("h2")[0].innerText == "Session has timed out") {
+                            timeoutBack();
                         }
-                    }
-                    if (document.getElementsByTagName("h2")[0].innerText == "Payment Method") {
-                        if (GM_getValue("cbsatar-pay", false)) {
-                            document.getElementById("paymentCreditCard").click();
-                            document.getElementsByName("submit")[0].click();
-                            setTimeout(function() {
-                                document.getElementById("address1").value = GM_getValue("cbsatar-address1", "");
-                                document.getElementById("address1").blur();
-                                document.getElementById("cards").options.selectedIndex = GM_getValue("cbsatar-cardType", 3);
-                                document.getElementById("cards").blur();
-                                document.getElementById("creditCardNumber").value = GM_getValue("cbsatar-cardNum", "");
-                                document.getElementById("creditCardNumber").blur();
-                                document.getElementById("expireMonth").options.selectedIndex = GM_getValue("cbsatar-expireMonth", 0);
-                                document.getElementById("expireMonth").blur();
-                                selectItemByValue(document.getElementById("expireYear"), GM_getValue("cbsatar-expireYear", 0));
-                                document.getElementById("expireYear").blur();
-                                document.getElementById("securityCode").value = GM_getValue("cbsatar-securityCode", "");
-                                document.getElementById("securityCode").blur();
+                        if (document.getElementsByTagName("h2")[0].innerText == "Make a Payment") {
+                            if (window.location.search.length == 0) {
+                                notify("You are set for payment page if you have the sound permission allowed.", false, true, false, false);
+                            } else {
+                                notify("The payment is invalid.", true, true, false, true);
+                                history.back(-1);
+                            }
+                        }
+                        if (document.getElementsByTagName("h2")[0].innerText == "Payment Method") {
+                            if (GM_getValue("cbsatar-pay", false)) {
+                                document.getElementById("paymentCreditCard").click();
+                                document.getElementsByName("submit")[0].click();
                                 setTimeout(function() {
-                                    document.getElementsByName("submit")[0].disabled = false;
-                                    confirmPay();
-                                });
-                            }, 1000);
+                                    document.getElementById("address1").value = GM_getValue("cbsatar-address1", "");
+                                    document.getElementById("address1").blur();
+                                    document.getElementById("cards").options.selectedIndex = GM_getValue("cbsatar-cardType", 3);
+                                    document.getElementById("cards").blur();
+                                    document.getElementById("creditCardNumber").value = GM_getValue("cbsatar-cardNum", "");
+                                    document.getElementById("creditCardNumber").blur();
+                                    document.getElementById("expireMonth").options.selectedIndex = GM_getValue("cbsatar-expireMonth", 0);
+                                    document.getElementById("expireMonth").blur();
+                                    selectItemByValue(document.getElementById("expireYear"), GM_getValue("cbsatar-expireYear", 0));
+                                    document.getElementById("expireYear").blur();
+                                    document.getElementById("securityCode").value = GM_getValue("cbsatar-securityCode", "");
+                                    document.getElementById("securityCode").blur();
+                                    setTimeout(function() {
+                                        document.getElementsByName("submit")[0].disabled = false;
+                                        confirmPay();
+                                    });
+                                }, 1000);
+                            }
                         }
                     }
-                }
-            }, 3000);
+                }, 3000);
+            }
             break;
     }
 }
@@ -799,7 +802,8 @@ async function handleError(e) {
 (function() {
     'use strict';
 
-    url = window.location.href.substr(0, window.location.href.length - window.location.search.length);
+    url = window.location.href.replace(/\?.*/i, "");
+    path = window.location.href.replace(/.*\/|\?.*/gi, "");
 
     window.addEventListener("error", function (e) {
         handleError(e.error.message);

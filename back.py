@@ -10,7 +10,7 @@ from playsound import playsound
 # Variables
 
 host = ("0.0.0.0", 8080)
-versionNum = "37"
+versionNum = "38"
 
 # Constants
 

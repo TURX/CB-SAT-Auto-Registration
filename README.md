@@ -6,7 +6,7 @@ SAT is a registered trademark of the College Board, and this project is not affl
 
 This plugin currently only supports international registration, but it can be easily adapted for test centers within the U.S.
 
-Current version: 37
+Current version: 38
 
 Features
 ---
@@ -31,6 +31,7 @@ Features
 - Log the status (backend needed)
 - Notify when idle
 - Support SAT, SAT essay, SAT Subject Tests, fee waiver, and student answer service
+- Support changes to existed registration
 
 Basic Usage
 ---
