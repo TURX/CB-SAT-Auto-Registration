@@ -14,7 +14,7 @@
 // @run-at       document-idle
 // @supportURL   https://github.com/TURX/CB-SAT-Auto-Registration/issues
 // @updateURL    https://raw.githubusercontent.com/TURX/CB-SAT-Auto-Registration/master/front.js
-// @version      38
+// @version      39
 // ==/UserScript==
 
 var url, path;
@@ -494,6 +494,18 @@ async function main() {
         }, 60000);
     }
 
+    if (!error && path == "submitChangeRegistration.action") {
+        if (document.getElementsByClassName("s2-h2").length > 0)
+            switch (document.getElementsByClassName("s2-h2")[0].innerText) {
+                case "Your Personal Info":
+                    path = "processMySatAction.action";
+                    break;
+                case "Your Test, Date, and Country or Region":
+                    path = "selectTestCenterAction.action";
+                    break;
+            }
+    }
+
     if (!error) switch (path) {
         case "login":
             if (GM_getValue("cbsatar-login", false)) {
@@ -545,6 +557,7 @@ async function main() {
                 document.getElementById("continue").click();
             }
             break;
+        case "confirmPersonalInfo.action":
         case "acceptSatTermsAndConditions.action":
         case "viewTestAndDateAction.action":
             if (document.referrer == "https://nsat.collegeboard.org/satweb/satHomeAction.action" && GM_getValue("cbsatar-selectDate", false)) {
@@ -598,7 +611,6 @@ async function main() {
                 }
             }
             break;
-        case "submitChangeRegistration.action":
         case "updateTestAndDateAction.action":
         case "selectTestCenterAction.action":
             if (document.getElementsByClassName("s2-h2")[1] != null) {

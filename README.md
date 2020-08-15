@@ -6,7 +6,7 @@ SAT is a registered trademark of the College Board, and this project is not affl
 
 This plugin currently only supports international registration, but it can be easily adapted for test centers within the U.S.
 
-Current version: 38
+Current version: 39
 
 Features
 ---
