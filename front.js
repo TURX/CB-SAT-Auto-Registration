@@ -14,13 +14,13 @@
 // @run-at       document-idle
 // @supportURL   https://github.com/TURX/CB-SAT-Auto-Registration/issues
 // @updateURL    https://raw.githubusercontent.com/TURX/CB-SAT-Auto-Registration/master/front.js
-// @version      39
+// @version      40
 // ==/UserScript==
 
-var url, path;
+let url, path;
 
 function getIfMobile() {
-    var sUserAgent = navigator.userAgent;
+    let sUserAgent = navigator.userAgent;
     if (sUserAgent.indexOf('Android') > -1 || sUserAgent.indexOf('iPhone') > -1 || sUserAgent.indexOf('iPad') > -1 || sUserAgent.indexOf('iPod') > -1 || sUserAgent.indexOf('Symbian') > -1) {
         return true;
     }
@@ -35,7 +35,7 @@ function wait(time) {
 
 function log(content) {
     console.log("[College Board SAT Auto Registration] " + content);
-    var promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/log", {
+    let promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/log", {
         "url": url,
         "content": content
     });
@@ -49,7 +49,7 @@ function logp(content) {
 }
 
 function countdown(timeoutReload, element, desc, url) {
-    var reloaded = false;
+    let reloaded = false;
     if (GM_getValue("cbsatar-brute", false)) {
         log(desc + ", will retry immediately (brute mode).");
         element.innerText = desc + ", will retry immediately (brute mode).";
@@ -79,7 +79,7 @@ function send(url, content) {
     return new Promise(async function(resolve, reject) {
         if (content) {
             url += "?";
-            for (var k in content) {
+            for (let k in content) {
                 url += k + "=" + encodeURIComponent(content[k]) + "&";
             }
             url = url.slice(0, -1);
@@ -92,10 +92,11 @@ function send(url, content) {
                 reject();
             },
             onload: function(data) {
-                if (data.responseText == "completed")
+                if (data.responseText == "completed") {
                     resolve();
-                else
+                } else {
                     reject();
+                }
             }
         });
     });
@@ -105,7 +106,7 @@ function sendg(url, content) {
     return new Promise(async function(resolve, reject) {
         if (content) {
             url += "?";
-            for (var k in content) {
+            for (let k in content) {
                 url += k + "=" + encodeURIComponent(content[k]) + "&";
             }
             url = url.slice(0, -1);
@@ -125,7 +126,7 @@ function sendg(url, content) {
     });
 }
 
-var stopPlay = false;
+let stopPlay = false;
 
 async function play(url, count, content) {
     return new Promise(async function(resolve, reject) {
@@ -147,8 +148,8 @@ async function play(url, count, content) {
 function browserPlay(url, count) {
     return new Promise(function(resolve, reject) {
         url = "https://github.com/TURX/CB-SAT-Auto-Registration/raw/master/res/" + url;
-        var m = new Audio(url);
-        var p = m.play();
+        let m = new Audio(url);
+        let p = m.play();
         p.catch(error => {
             alert("Please grant the sound permission for https://nsat.collegeboard.org/, https://pps.collegeboard.org/, and https://account.collegeboard.org/ to use College Board SAT Auto Registration.");
         })
@@ -204,10 +205,8 @@ async function notify(content, loop, ifAlert, ifTitle, emergency) {
     });
 }
 
-var i;
-
 function selectItemByValue(element, value) {
-    for (i = 0; i < element.options.length; i++) {
+    for (let i = 0; i < element.options.length; i++) {
         if (element.options[i].value === value) {
             element.selectedIndex = i;
             break;
@@ -216,7 +215,7 @@ function selectItemByValue(element, value) {
 }
 
 function selectItemByText(element, text) {
-    for (i = 0; i < element.options.length; i++) {
+    for (let i = 0; i < element.options.length; i++) {
         if (element.options[i].text === text) {
             element.selectedIndex = i;
             break;
@@ -224,18 +223,21 @@ function selectItemByText(element, text) {
     }
 }
 
-var preferSelectId;
+let preferSelectId;
 
 function findTestCenter() {
     logp(document.getElementById("testCenterSearchResults_wrapper").innerText);
     if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("Seat Available") != -1) {
         if (GM_getValue("cbsatar-enable-preferSelect", false) && document.getElementById("testCenterSearchResults_wrapper").innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
+            let selectedCities = GM_getValue("cbsatar-preferSelect", "").split(",");
             if (document.getElementsByTagName("tr").length > 1) {
-                for (i = 1; i < document.getElementsByTagName("tr").length; i++) {
-                    if (document.getElementsByTagName("tr")[i].children[1].innerText.search(GM_getValue("cbsatar-preferSelect", "BANGKOK")) != -1) {
-                        if (document.getElementsByTagName("tr")[i].children[2].innerText.search("Seat Available") != -1) {
-                            preferSelectId = document.getElementsByTagName("tr")[1].children[3].getElementsByTagName("a")[0].id;
-                            return true;
+                for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
+                    for (let j in selectedCities) {
+                        if (document.getElementsByTagName("tr")[i].children[1].innerText.search(j) != -1) {
+                            if (document.getElementsByTagName("tr")[i].children[2].innerText.search("Seat Available") != -1) {
+                                preferSelectId = document.getElementsByTagName("tr")[i].children[3].getElementsByTagName("a")[0].id;
+                                return true;
+                            }
                         }
                     }
                 }
@@ -339,9 +341,9 @@ function startSettings() {
             } else {
                 GM_setValue("cbsatar-countryName", "None");
             }
-            GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add more condition for the address of the test center?"));
+            GM_setValue("cbsatar-enable-preferSelect", confirm("Do you want to add a list of preferred cities of the test center?"));
             if (GM_getValue("cbsatar-enable-preferSelect", false)) {
-                GM_setValue("cbsatar-preferSelect", prompt("What condition do you need more?\nFor example: BANGKOK.", GM_getValue("cbsatar-preferSelect", "BANGKOK")));
+                GM_setValue("cbsatar-preferSelect", prompt("Please give a list of preferred cities?\nFor example: BANGKOK,CHIANG MAI.", GM_getValue("cbsatar-preferSelect", "BANGKOK")));
             }
             GM_setValue("cbsatar-tcselect", confirm("Do you want to skip selecting a test center and go to the next page?"));
             GM_setValue("cbsatar-seats", confirm("Do you want to automaically check if any seat is available in the region you selected?"));
@@ -372,7 +374,7 @@ function startSettings() {
         notify("You are set for main page if you have the sound permission allowed.", false, true, false, false);
         alert("Congratulations:\nThe settings are completed. Enjoy!");
     } else {
-        var review = "Settings - College Board SAT Auto Registration (Page 1/2)\n\n";
+        let review = "Settings - College Board SAT Auto Registration (Page 1/2)\n\n";
         review += "Agree terms of College Board: " + GM_getValue("cbsatar-agreeTerms", false) + "\n";
         review += "Auto login: " + GM_getValue("cbsatar-login", false) + "\n";
         review += "CB username: " + GM_getValue("cbsatar-username", "") + "\n";
@@ -388,8 +390,8 @@ function startSettings() {
         review += "Prefer a new test center: " + GM_getValue("cbsatar-prefer", true) + "\n";
         review += "Auto select country: " + GM_getValue("cbsatar-country", false) + "\n";
         review += "Country name: " + GM_getValue("cbsatar-countryName", "None") + "\n";
-        review += "Conditioned Selection: " + GM_getValue("cbsatar-enable-preferSelect", false) + "\n";
-        review += "Address Condition: " + GM_getValue("cbsatar-preferSelect", "None") + "\n";
+        review += "Conditioned Selection by Cities: " + GM_getValue("cbsatar-enable-preferSelect", false) + "\n";
+        review += "List of Cities: " + GM_getValue("cbsatar-preferSelect", "None") + "\n";
         review += "Auto find seat: " + GM_getValue("cbsatar-seats", false) + "\n";
         review += "Skip practice materials: " + GM_getValue("cbsatar-practice", false) + "\n";
         // review += "Auto pay: " + GM_getValue("cbsatar-pay", false) + "\n";
@@ -420,7 +422,7 @@ function startSettings() {
 function terminatePlay() {
     if (!stopPlay) {
         stopPlay = true;
-        var promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/stopPlay");
+        let promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/stopPlay");
         promise.catch((e) => {
             log("Backend stopPlay error: " + e);
         });
@@ -428,25 +430,28 @@ function terminatePlay() {
 }
 
 function dateCheckOtherComponents() {
-    if (GM_getValue("cbsatar-date-essay", false))
+    if (GM_getValue("cbsatar-date-essay", false)) {
         document.getElementById("essayAddOnYes").checked = true;
-    else
+    } else {
         document.getElementById("essayAddOnNo").checked = true;
-    if (GM_getValue("cbsatar-date-feeWaiver", false))
+    }
+    if (GM_getValue("cbsatar-date-feeWaiver", false)) {
         document.getElementById("feeWaiverYes").checked = true;
-    else
+    } else {
         document.getElementById("feeWaiverNo").checked = true;
-    if (GM_getValue("cbsatar-date-sas", false))
+    }
+    if (GM_getValue("cbsatar-date-sas", false)) {
         document.getElementById("optBuySAS").checked = true;
-    else
+    } else {
         document.getElementById("optDeclineSAS").checked = true;
+    }
 }
 
 async function main() {
-    var error = false;
+    let error = false;
     log("Enabled, current URL: " + url);
 
-    var promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/visit", {
+    let promise = send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/visit", {
         "url": url
     });
     promise.catch((e) => {
@@ -468,7 +473,7 @@ async function main() {
         }
     }
 
-    if (!error)
+    if (!error) {
         try {
             jQuery();
         } catch (e) {
@@ -476,16 +481,17 @@ async function main() {
             notify("jQuery failed.", false, false, false, false);
             location.reload();
         }
+    }
 
     if (url == "https://nsat.collegeboard.org/satweb/satHomeAction.action") {
         log("Homepage.");
-        var openSettingsLi1 = document.createElement("li");
-        var openSettingsA = document.createElement("a");
+        let openSettingsLi1 = document.createElement("li");
+        let openSettingsA = document.createElement("a");
         openSettingsA.innerText = "Auto Registration Settings";
         openSettingsA.addEventListener("click", startSettings);
         openSettingsLi1.appendChild(openSettingsA);
         document.getElementsByClassName("cb-desktop-navigation")[0].children[0].children[0].children[1].appendChild(openSettingsLi1);
-        var openSettingsLi2 = openSettingsLi1.cloneNode(true);
+        let openSettingsLi2 = openSettingsLi1.cloneNode(true);
         openSettingsLi2.children[0].addEventListener("click", startSettings);
         document.getElementsByClassName("cb-mobile-navigation")[0].children[1].children[0].children[0].appendChild(openSettingsLi2);
     } else {
@@ -495,7 +501,7 @@ async function main() {
     }
 
     if (!error && path == "submitChangeRegistration.action") {
-        if (document.getElementsByClassName("s2-h2").length > 0)
+        if (document.getElementsByClassName("s2-h2").length > 0) {
             switch (document.getElementsByClassName("s2-h2")[0].innerText) {
                 case "Your Personal Info":
                     path = "processMySatAction.action";
@@ -504,6 +510,7 @@ async function main() {
                     path = "selectTestCenterAction.action";
                     break;
             }
+        }
     }
 
     if (!error) switch (path) {
@@ -581,20 +588,21 @@ async function main() {
                         document.getElementById("testDateTab_" + GM_getValue("cbsatar-preferDate", "")).children[0].click();
                         notify("Preferred date is available.", true, false, true, true);
                         await new Promise(r => setTimeout(r, 500));
-                        var selectedSubjects = GM_getValue("cbsatar-subjectSelect", "").split(" ");
+                        let selectedSubjects = GM_getValue("cbsatar-subjectSelect", "").split(" ");
                         selectedSubjects.forEach(id => {
                             document.getElementById(id).click();
                         });
-                        if (GM_getValue("cbsatar-date-feeWaiver", false))
+                        if (GM_getValue("cbsatar-date-feeWaiver", false)) {
                             document.getElementById("feeWaiverYes").checked = true;
-                        else
+                        } else {
                             document.getElementById("feeWaiverNo").checked = true;
+                        }
                         document.getElementById("continue").click();
                     } else {
                         countdown(15, document.getElementById("testDateAndAvailability"), "The preferred date is not available");
                     }
                 } else {
-                    var foundDate = false;
+                    let foundDate = false;
                     document.getElementsByName("selectedTestAdminYYYYMM").forEach((v) => {
                         if (v.value == GM_getValue("cbsatar-preferDate", "")) {
                             foundDate = true;
@@ -635,7 +643,7 @@ async function main() {
                             break;
                         } else if (GM_getValue("cbsatar-seats", false)) {
                             if (GM_getValue("cbsatar-country", false)) {
-                                var countrySelect = document.getElementById("selectCountryName");
+                                let countrySelect = document.getElementById("selectCountryName");
                                 log("Selected Country: " + countrySelect.options[countrySelect.selectedIndex].text);
                                 if (countrySelect.options[countrySelect.selectedIndex].text != GM_getValue("cbsatar-countryName", "None") && GM_getValue("cbsatar-countryName", "None") != "None") {
                                     log("Preferred Country: " + GM_getValue("cbsatar-countryName", "None"));
@@ -644,7 +652,7 @@ async function main() {
                                 }
                             }
                             log("Finding seat...");
-                            var seatAvailable = false;
+                            let seatAvailable = false;
                             if (document.getElementById("testCenterSearchResults_wrapper") != null) {
                                 log("Test Center Information:");
                                 while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
@@ -671,12 +679,12 @@ async function main() {
                                         log("Select Ideal Test Center.");
                                         log("Test Center Information:");
                                         while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
-                                            for (i = 1; i < document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr").length; i++) {
+                                            for (let i = 1; i < document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr").length; i++) {
                                                 log("Code: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[2].getElementsByTagName("a")[0].getAttribute("data-code") + "; Name: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[0].innerText)
                                             }
                                             document.getElementById("testCenterSearchResults_next").click();
                                         }
-                                        for (i = 1; i < document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr").length; i++) {
+                                        for (let i = 1; i < document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr").length; i++) {
                                             log("Code: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[2].getElementsByTagName("a")[0].getAttribute("data-code") + "; Name: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[0].innerText)
                                         }
                                     }
@@ -694,7 +702,7 @@ async function main() {
                                 if (document.getElementById("newCenterInfo") == null) {
                                     if (window.location.href != "https://nsat.collegeboard.org/satweb/registration/updateTestAndDateAction.action" || !GM_getValue("cbsatar-country", false)) {
                                         if (GM_getValue("cbsatar-country", false)) {
-                                            var countrySelect = document.getElementById("selectCountryName");
+                                            let countrySelect = document.getElementById("selectCountryName");
                                             log("Selected Country: " + countrySelect.options[countrySelect.selectedIndex].text);
                                             if (countrySelect.options[countrySelect.selectedIndex].text != GM_getValue("cbsatar-countryName", "None") && GM_getValue("cbsatar-countryName", "None") != "None") {
                                                 log("Preferred Country: " + GM_getValue("cbsatar-countryName", "None"));
@@ -791,9 +799,10 @@ async function main() {
 
 async function handleError(e) {
     console.log("[College Board SAT Auto Registration] Error detected: " + e);
-    var errorSendError = false;
+    let errorSendError = false;
+    let errorPageCount = 0;
     try {
-        var errorPageCount = await sendg("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/errorHandler", {
+        errorPageCount = await sendg("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/errorHandler", {
             "url": url,
             "e": e
         });
