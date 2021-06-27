@@ -25,7 +25,6 @@ source_phone_number = os.environ['SOURCE_PHONE_NUMBER']
 soundPlayCount = -1
 soundPlayStop = False
 soundPlaying = False
-soundForIdle = False
 lastUrl = ""
 visitCount = 0
 errorCount = 0
@@ -79,24 +78,9 @@ def sendSMS(number, message):
 
 soundPlayThread = threading.Thread(target=play, args=("se_ymd05.wav",))
 
-def idle():
-    global soundPlaying, soundPlayCount, soundPlayStop, soundForIdle, soundPlayThread
-    log("event: idle")
-    soundForIdle = True
-    if (soundPlaying == False):
-        soundPlayCount = -1
-        soundPlayStop = False
-        soundPlaying = True
-        soundPlayThread = threading.Thread(target=play, args=("se_ymd05.wav",))
-        soundPlayThread.start()
-    else:
-        soundPlayCount = -1
-
-timerIdle = threading.Timer(60.0, idle)
-
 class Request(BaseHTTPRequestHandler):
     def do_GET(self):
-        global soundPlayStop, soundPlaying, soundPlayCount, lastUrl, visitCount, errorCount, noError, timerIdle, soundForIdle, soundPlayThread
+        global soundPlayStop, soundPlaying, soundPlayCount, lastUrl, visitCount, errorCount, noError, soundPlayThread
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-type", "application/json")
@@ -106,14 +90,6 @@ class Request(BaseHTTPRequestHandler):
         query = urllib.parse.parse_qs(urlInfo.query)
         if path in ["/startPlay", "/stopPlay", "/visit", "/errorHandler", "/log", "/test"]:
             self.send_response(200)
-            if (soundForIdle == True):
-                soundForIdle = False
-                soundPlayStop = True
-                soundPlaying = False
-                log("event: stop playing sound by idle")
-            timerIdle.cancel()
-            timerIdle = threading.Timer(60.0, idle)
-            timerIdle.start()
         else:
             self.send_response(404)
             self.end_headers()
@@ -179,9 +155,10 @@ class Request(BaseHTTPRequestHandler):
                 log("content: " + query.get("content")[0])
             responseBody = "completed"
         elif path == "/test":
+            log("Testing")
             responseBody = "Test completed"
         self.wfile.write(responseBody.encode("utf-8"))
-        log("respond to frontend")
+        log("Respond to frontend")
     def log_message(self, format, *args):
         return
 
