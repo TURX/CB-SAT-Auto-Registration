@@ -1,3 +1,5 @@
+ #!/usr/local/bin/python3
+
 import os
 import signal
 import sys
@@ -6,12 +8,18 @@ import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from playsound import playsound
+from twilio.rest import Client as TwilioClient
 
 # Variables
 
 host = ("0.0.0.0", 8080)
 versionNum = "40"
 
+# Find your Account SID and Auth Token at twilio.com/console
+# and set the environment variables. See http://twil.io/secure
+account_sid = os.environ['TWILIO_ACCOUNT_SID']
+auth_token = os.environ['TWILIO_AUTH_TOKEN']
+source_phone_number = os.environ['SOURCE_PHONE_NUMBER']
 # Constants
 
 soundPlayCount = -1
@@ -23,6 +31,17 @@ visitCount = 0
 errorCount = 0
 noError = 0
 serverRunning = True
+
+def logToFile(str):
+    with open("cbsatar.log", "a") as logFile:
+        logFile.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str + "\n")
+
+def logToConsole(str):
+    print("[College Board SAT Auto Registration] " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str)
+
+def log(str):
+    logToConsole(str)
+    logToFile(str)
 
 def play(file):
     if (file == None):
@@ -38,16 +57,25 @@ def play(file):
     soundPlayStop = True
     soundPlaying = False
 
-def logToFile(str):
-    with open("cbsatar.log", "a") as logFile:
-        logFile.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str + "\n")
+def call(number):
+    client = TwilioClient(account_sid, auth_token)
+    call = client.calls.create(
+                        url='http://demo.twilio.com/docs/voice.xml',
+                        to=number,
+                        from_=source_phone_number
+                    )
+    log("Making a call to {}".format(number))
 
-def logToConsole(str):
-    print("[College Board SAT Auto Registration] " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str)
+def sendSMS(number, message):
+    client = TwilioClient(account_sid, auth_token)
 
-def log(str):
-    logToConsole(str)
-    logToFile(str)
+    message = client.messages \
+                    .create(
+                         body=message,
+                         from_=source_phone_number,
+                         to=number
+                     )
+    log("Sending message '{}' to {}".format(message, number))
 
 soundPlayThread = threading.Thread(target=play, args=("se_ymd05.wav",))
 
@@ -76,7 +104,7 @@ class Request(BaseHTTPRequestHandler):
         urlInfo = urllib.parse.urlparse(self.path)
         path = urlInfo.path
         query = urllib.parse.parse_qs(urlInfo.query)
-        if (path == "/startPlay") or (path == "/stopPlay") or (path == "/visit") or (path == "/errorHandler") or (path == "/log") or (path == "/test"):
+        if path in ["/startPlay", "/stopPlay", "/visit", "/errorHandler", "/log", "/test"]:
             self.send_response(200)
             if (soundForIdle == True):
                 soundForIdle = False
@@ -111,6 +139,7 @@ class Request(BaseHTTPRequestHandler):
             soundPlaying = True
             soundPlayThread = threading.Thread(target=play, args=(file,))
             soundPlayThread.start()
+
             responseBody = "completed"
         elif path == "/stopPlay":
             soundPlayStop = True
@@ -150,7 +179,7 @@ class Request(BaseHTTPRequestHandler):
                 log("content: " + query.get("content")[0])
             responseBody = "completed"
         elif path == "/test":
-            responseBody = "completed"
+            responseBody = "Test completed"
         self.wfile.write(responseBody.encode("utf-8"))
         log("respond to frontend")
     def log_message(self, format, *args):
