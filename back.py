@@ -17,7 +17,7 @@ versionNum = "40"
 # and set the environment variables. See http://twil.io/secure
 account_sid = os.environ['TWILIO_ACCOUNT_SID']
 auth_token = os.environ['TWILIO_AUTH_TOKEN']
-
+source_phone_number = os.environ['SOURCE_PHONE_NUMBER']
 # Constants
 
 soundPlayCount = -1
@@ -49,17 +49,17 @@ def call(number):
     call = client.calls.create(
                         url='http://demo.twilio.com/docs/voice.xml',
                         to=number,
-                        from_='+17034578413'
+                        from_=source_phone_number
                     )
 
-def sendSMS(message):
+def sendSMS(number, message):
     client = Client(account_sid, auth_token)
 
     message = client.messages \
                     .create(
                          body=message,
-                         from_='+17034578413',
-                         to='+447907706670'
+                         from_=source_phone_number,
+                         to=number
                      )
 
 def logToFile(str):
