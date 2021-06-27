@@ -1,3 +1,5 @@
+ #!/usr/local/bin/python3
+
 import os
 import signal
 import sys
@@ -6,7 +8,7 @@ import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from playsound import playsound
-from twilio.rest import Client
+from twilio.rest import Client as TwilioClient
 
 # Variables
 
@@ -30,6 +32,17 @@ errorCount = 0
 noError = 0
 serverRunning = True
 
+def logToFile(str):
+    with open("cbsatar.log", "a") as logFile:
+        logFile.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str + "\n")
+
+def logToConsole(str):
+    print("[College Board SAT Auto Registration] " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str)
+
+def log(str):
+    logToConsole(str)
+    logToFile(str)
+
 def play(file):
     if (file == None):
         file = "se_ymd05.wav"
@@ -45,15 +58,16 @@ def play(file):
     soundPlaying = False
 
 def call(number):
-    client = Client(account_sid, auth_token)
+    client = TwilioClient(account_sid, auth_token)
     call = client.calls.create(
                         url='http://demo.twilio.com/docs/voice.xml',
                         to=number,
                         from_=source_phone_number
                     )
+    log("Making a call to {}".format(number))
 
 def sendSMS(number, message):
-    client = Client(account_sid, auth_token)
+    client = TwilioClient(account_sid, auth_token)
 
     message = client.messages \
                     .create(
@@ -61,17 +75,7 @@ def sendSMS(number, message):
                          from_=source_phone_number,
                          to=number
                      )
-
-def logToFile(str):
-    with open("cbsatar.log", "a") as logFile:
-        logFile.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str + "\n")
-
-def logToConsole(str):
-    print("[College Board SAT Auto Registration] " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ": " + str)
-
-def log(str):
-    logToConsole(str)
-    logToFile(str)
+    log("Sending message '{}' to {}".format(message, number))
 
 soundPlayThread = threading.Thread(target=play, args=("se_ymd05.wav",))
 
@@ -175,7 +179,7 @@ class Request(BaseHTTPRequestHandler):
                 log("content: " + query.get("content")[0])
             responseBody = "completed"
         elif path == "/test":
-            responseBody = "completed"
+            responseBody = "Test completed"
         self.wfile.write(responseBody.encode("utf-8"))
         log("respond to frontend")
     def log_message(self, format, *args):
