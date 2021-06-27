@@ -6,11 +6,18 @@ import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from playsound import playsound
+from twilio.rest import Client
 
 # Variables
 
 host = ("0.0.0.0", 8080)
 versionNum = "40"
+
+# Find your Account SID and Auth Token at twilio.com/console
+# and set the environment variables. See http://twil.io/secure
+account_sid = "ACc9acc883cbbe0570164c0cbcd06029c1"
+auth_token = "988c497cf2376b61c8f9687e9a20deae"
+
 
 # Constants
 
@@ -37,6 +44,24 @@ def play(file):
         playsound("res/" + file)
     soundPlayStop = True
     soundPlaying = False
+
+def call(number):
+    client = Client(account_sid, auth_token)
+    call = client.calls.create(
+                        url='http://demo.twilio.com/docs/voice.xml',
+                        to=number,
+                        from_='+17034578413'
+                    )
+
+def sendSMS(message):
+    client = Client(account_sid, auth_token)
+
+    message = client.messages \
+                    .create(
+                         body=message,
+                         from_='+17034578413',
+                         to='+447907706670'
+                     )
 
 def logToFile(str):
     with open("cbsatar.log", "a") as logFile:
@@ -76,7 +101,7 @@ class Request(BaseHTTPRequestHandler):
         urlInfo = urllib.parse.urlparse(self.path)
         path = urlInfo.path
         query = urllib.parse.parse_qs(urlInfo.query)
-        if (path == "/startPlay") or (path == "/stopPlay") or (path == "/visit") or (path == "/errorHandler") or (path == "/log") or (path == "/test"):
+        if path in ["/startPlay", "/stopPlay", "/visit", "/errorHandler", "/log", "/test"]:
             self.send_response(200)
             if (soundForIdle == True):
                 soundForIdle = False
@@ -111,6 +136,7 @@ class Request(BaseHTTPRequestHandler):
             soundPlaying = True
             soundPlayThread = threading.Thread(target=play, args=(file,))
             soundPlayThread.start()
+
             responseBody = "completed"
         elif path == "/stopPlay":
             soundPlayStop = True
