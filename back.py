@@ -15,9 +15,8 @@ versionNum = "40"
 
 # Find your Account SID and Auth Token at twilio.com/console
 # and set the environment variables. See http://twil.io/secure
-account_sid = "ACc9acc883cbbe0570164c0cbcd06029c1"
-auth_token = "988c497cf2376b61c8f9687e9a20deae"
-
+account_sid = os.environ['TWILIO_ACCOUNT_SID']
+auth_token = os.environ['TWILIO_AUTH_TOKEN']
 
 # Constants
 
