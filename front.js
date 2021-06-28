@@ -9,6 +9,8 @@
 // @match        https://account.collegeboard.org/*
 // @match        https://nsat.collegeboard.org/*
 // @match        https://pps.collegeboard.org/*
+// @match        https://mysat.collegeboard.org/*
+// @match        https://satreg.collegeboard.org/*
 // @name         College Board SAT Auto Registration
 // @namespace    https://github.com/TURX/CB-SAT-Auto-Registration
 // @run-at       document-idle
@@ -477,29 +479,76 @@ async function main() {
         try {
             jQuery();
         } catch (e) {
-            log("jQuery failed to load.");
-            notify("jQuery failed.", false, false, false, false);
-            location.reload();
+            log("jQuery failed to load: " + e);
+            //notify("jQuery failed.", false, false, false, false);
+            //location.reload();
         }
     }
 
-    if (url == "https://nsat.collegeboard.org/satweb/satHomeAction.action") {
+    if (url == "https://mysat.collegeboard.org/dashboard") {
         log("Homepage.");
-        let openSettingsLi1 = document.createElement("li");
-        let openSettingsA = document.createElement("a");
-        openSettingsA.innerText = "Auto Registration Settings";
-        openSettingsA.addEventListener("click", startSettings);
-        openSettingsLi1.appendChild(openSettingsA);
-        document.getElementsByClassName("cb-desktop-navigation")[0].children[0].children[0].children[1].appendChild(openSettingsLi1);
-        let openSettingsLi2 = openSettingsLi1.cloneNode(true);
-        openSettingsLi2.children[0].addEventListener("click", startSettings);
-        document.getElementsByClassName("cb-mobile-navigation")[0].children[1].children[0].children[0].appendChild(openSettingsLi2);
+        setTimeout(function() {
+            //wait the page fully loaded
+            log(path);
+            let openSettingsLi1 = document.createElement("div");
+            let openSettingsA = document.createElement("a");
+            openSettingsA.innerText = "Auto Registration Settings";
+            openSettingsA.addEventListener("click", startSettings);
+            openSettingsLi1.appendChild(openSettingsA);
+            document.getElementById("global-header-navigation").appendChild(openSettingsLi1);
+            document.getElementById("qc-id-header-register-button").click();
+
+       // let openSettingsLi2 = openSettingsLi1.cloneNode(true);
+       // openSettingsLi2.children[0].addEventListener("click", startSettings);
+       // document.getElementsByClassName("cb-mobile-navigation")[0].children[1].children[0].children[0].appendChild(openSettingsLi2);
+        }, 6000);
     } else {
         setTimeout(function() {
             handleError("idle detected");
         }, 60000);
     }
 
+
+
+    if (!error && path == "register") {
+
+         setTimeout(function() {
+             log("3"+path);
+            document.getElementsByClassName("cb-btn-yellow")[0].click();
+        }, 4000);
+
+    }
+
+    if (!error && path == "register") {
+        setTimeout(function() {
+          if (document.getElementsByClassName("card-text")[1].innerText == "You’re On Your Way!") {
+              // await new Promise(r => setTimeout(r, 6000));
+               document.getElementsByClassName("cb-btn-yellow")[1].click();
+              log("4"+path);
+
+          }
+        }, 8000);
+    }
+
+    if (!error && path == "register") {
+        setTimeout(function() {
+          if (document.getElementsByTagName("h1")[2].innerText == "Terms and Conditions") {
+              // await new Promise(r => setTimeout(r, 6000));
+              var element = document.getElementById("terms-desc");
+              element.scrollTop = element.scrollHeight - element.clientHeight;
+              log("5"+path);
+          }
+        }, 10000);
+
+        setTimeout(function() {
+          if (document.getElementsByTagName("h1")[2].innerText == "Terms and Conditions") {
+              log("Check to agree the terms and go to the next step.");
+              document.getElementById("terms-acceptance-checkbox").click();
+              document.getElementById("forward-btn").click();
+              log("6"+path);
+          }
+        }, 12000);
+    }
     if (!error && path == "submitChangeRegistration.action") {
         if (document.getElementsByClassName("s2-h2").length > 0) {
             switch (document.getElementsByClassName("s2-h2")[0].innerText) {

@@ -97,7 +97,11 @@ class Request(BaseHTTPRequestHandler):
         if path == "/startPlay":
             log("event: start playing sound")
             if (query.get("reason")):
+                reason = query.get("reason")[0];
                 log("reason: " + query.get("reason")[0])
+                if (reason == "Seat available."):
+                    call("+447774863377")
+
             if (query.get("count")):
                 log("count: " + query.get("count")[0])
             if (query.get("file")):
@@ -156,6 +160,7 @@ class Request(BaseHTTPRequestHandler):
             responseBody = "completed"
         elif path == "/test":
             log("Testing")
+            #call("+44")
             responseBody = "Test completed"
             
         self.wfile.write(responseBody.encode("utf-8"))
