@@ -133,6 +133,7 @@ let stopPlay = false;
 async function play(url, count, content) {
     return new Promise(async function(resolve, reject) {
         try {
+            log("play call startPlay");
             await send("http://" + GM_getValue("cbsatar-backend", "localhost") + ":8080/startPlay", {
                 "count": count,
                 "reason": content,
@@ -176,9 +177,18 @@ function browserPlay(url, count) {
     });
 }
 
+async function callMe(content) {
+    return new Promise(async function(resolve) {
+        log("QIQI callMe: " + content);
+        play("se_sud06.wav", -1, content);
+        return resolve();
+    });
+
+}
+
 async function notify(content, loop, ifAlert, ifTitle, emergency) {
     return new Promise(async function(resolve) {
-        log(content);
+
         if (ifTitle) document.getElementsByClassName("s2-page-title")[0].innerText = content;
         GM_notification({
             text: content,
@@ -300,6 +310,43 @@ async function confirmPay() {
             notify("The payment information is invalid.", true, true, false, true);
         }
     }, 1000);
+}
+
+async function checkAvailibility()
+{
+    let seatAvailable = false;
+    await wait(30000);
+    while(!seatAvailable){
+           await wait(10000);
+               //document.getElementById("test-center-date-button-AUG-28").click();
+               log("Step 1.1 : Select Date");
+               document.getElementById("test-center-date-button-OCT-2").click();
+           await wait(2000);
+               log("Step 2 : Test Date continue.");
+               document.getElementById("testdate-continue-button").click();
+
+               log("Step 3 : Test Center Search.");
+               await wait(5000);
+               document.getElementById("test-center-search-option").click();
+               await wait(2000);
+               log("Step 4 : Test Center continue.");
+               document.getElementsByTagName("button")[7].click();
+               await wait(2000);
+                log("Step 5 : Test Center Select.");
+                for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
+                    if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
+                        document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
+                        document.getElementById("testcenter-continue-button").click(); //reserve first
+                        seatAvailable = true;
+                        break;
+                    }
+                }
+
+          log("Seat not available, wait for 5 seconds to continue searching...");
+    }
+    log("Step 6 : Notify.");
+    document.getElementById("continue-confirm-test-selection-btn").click(); //reserve for 20mins
+    callMe("Seat available.");
 }
 
 function startSettings() {
@@ -462,11 +509,11 @@ async function main() {
 
     document.addEventListener("mousemove", terminatePlay);
     document.addEventListener("touchstart", terminatePlay);
-
+/*
     if (!GM_getValue("cbsatar-agreeTerms", false)) {
         error = true;
     }
-
+*/
     if (!error && document.getElementsByTagName("h1").length != 0 && url != "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action") {
         if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object" || document.getElementsByTagName("h1")[0].innerText == "Access Denied") {
             error = true;
@@ -490,21 +537,25 @@ async function main() {
         setTimeout(function() {
             //wait the page fully loaded
             log(path);
+            /*
             let openSettingsLi1 = document.createElement("div");
             let openSettingsA = document.createElement("a");
             openSettingsA.innerText = "Auto Registration Settings";
             openSettingsA.addEventListener("click", startSettings);
             openSettingsLi1.appendChild(openSettingsA);
             document.getElementById("global-header-navigation").appendChild(openSettingsLi1);
+            */
             document.getElementById("qc-id-header-register-button").click();
 
        // let openSettingsLi2 = openSettingsLi1.cloneNode(true);
        // openSettingsLi2.children[0].addEventListener("click", startSettings);
        // document.getElementsByClassName("cb-mobile-navigation")[0].children[1].children[0].children[0].appendChild(openSettingsLi2);
         }, 6000);
-    } else {
+    }
+    else {
         setTimeout(function() {
-            handleError("idle detected");
+            //handleError("idle detected");
+            // location.reload();
         }, 60000);
     }
 
@@ -513,24 +564,38 @@ async function main() {
     if (!error && path == "register") {
 
          setTimeout(function() {
+
+             if(document.getElementsByTagName("h1")[1].innerText == "Enter Your Information" &&
+                document.getElementsByClassName("cb-btn-yellow")[1].innerText == "Get Started") {
+                  log("3"+path);
+                  document.getElementsByClassName("cb-btn-yellow")[1].click();
+             }
+
+
+        }, 10000);
+
+        setTimeout(function() {
              log("3"+path);
-            document.getElementsByClassName("cb-btn-yellow")[0].click();
-        }, 4000);
+            if(document.getElementsByTagName("h3")[1].innerText =="Student Information") {
+                document.getElementById("graddate-save-button").click();
+                document.getElementById("grade-save-button").click();
+                document.getElementsByClassName("cb-btn-yellow")[0].click(); // jump to test date/center tab directly
+            }
+
+        }, 13000);
 
     }
 
     if (!error && path == "register") {
-        setTimeout(function() {
+         setTimeout(function() {
           if (document.getElementsByClassName("card-text")[1].innerText == "You’re On Your Way!") {
               // await new Promise(r => setTimeout(r, 6000));
                document.getElementsByClassName("cb-btn-yellow")[1].click();
               log("4"+path);
 
           }
-        }, 8000);
-    }
+        }, 16000);
 
-    if (!error && path == "register") {
         setTimeout(function() {
           if (document.getElementsByTagName("h1")[2].innerText == "Terms and Conditions") {
               // await new Promise(r => setTimeout(r, 6000));
@@ -538,7 +603,7 @@ async function main() {
               element.scrollTop = element.scrollHeight - element.clientHeight;
               log("5"+path);
           }
-        }, 10000);
+        }, 18000);
 
         setTimeout(function() {
           if (document.getElementsByTagName("h1")[2].innerText == "Terms and Conditions") {
@@ -546,303 +611,36 @@ async function main() {
               document.getElementById("terms-acceptance-checkbox").click();
               document.getElementById("forward-btn").click();
               log("6"+path);
-          }
-        }, 12000);
-    }
-    if (!error && path == "submitChangeRegistration.action") {
-        if (document.getElementsByClassName("s2-h2").length > 0) {
-            switch (document.getElementsByClassName("s2-h2")[0].innerText) {
-                case "Your Personal Info":
-                    path = "processMySatAction.action";
-                    break;
-                case "Your Test, Date, and Country or Region":
-                    path = "selectTestCenterAction.action";
-                    break;
-            }
-        }
-    }
 
-    if (!error) switch (path) {
-        case "login":
-            if (GM_getValue("cbsatar-login", false)) {
-                log("Login.");
-                document.getElementById("username").value = GM_getValue("cbsatar-username", "");
-                document.getElementById("password").value = GM_getValue("cbsatar-password", "");
-                log("Username: " + document.getElementById("username").value);
-                log("Password: " + document.getElementById("password").value);
-                document.getElementsByClassName("btn")[0].disabled = false;
-                document.getElementsByClassName("btn")[0].click();
-            }
-            break;
-        case "authenticateUser":
-            if (GM_getValue("cbsatar-login", false)) {
-                if (document.getElementsByClassName("cb-error-msg").length > 0) {
-                    notify("The login information is invalid.", true, true, false, false);
-                }
-            }
-            break;
-        case "processMySatAction.action":
-            if (document.getElementsByClassName("s2-h2").length == 0) {
-                if (GM_getValue("cbsatar-start", false)) {
-                    log("Go to the next step.");
-                    if (typeof newRegistration == "function") newRegistration('', 'initRegistration', '');
-                }
-            } else {
-                if (GM_getValue("cbsatar-personalInfo", false)) {
-                    log("Go to the next step.");
-                    document.getElementById("continue").click();
-                }
-            }
-            break;
-        case "viewSatTicketID.action":
-            if (GM_getValue("cbsatar-personalInfo", false)) {
-                log("Go to the next step.");
-                document.getElementById("continue").click();
-            }
-            break;
-        case "sdqDemographics.action":
-            if (GM_getValue("cbsatar-personalInfo", false)) {
-                log("Skip to the next step.");
-                document.getElementById("updateLater").click();
-            }
-            break;
-        case "viewSatTermsAndConditions.action":
-            if (GM_getValue("cbsatar-terms", false)) {
-                log("Check to agree the terms and go to the next step.");
-                document.getElementById("agreeTerms").click();
-                document.getElementById("continue").click();
-            }
-            break;
-        case "confirmPersonalInfo.action":
-        case "acceptSatTermsAndConditions.action":
-        case "viewTestAndDateAction.action":
-            if (document.referrer == "https://nsat.collegeboard.org/satweb/satHomeAction.action" && GM_getValue("cbsatar-selectDate", false)) {
-                document.getElementById("continue").click();
-            }
-            else if (GM_getValue("cbsatar-dates", false)) {
-                if (document.getElementsByClassName("s2-well-text-block").length != 0) {
-                    if (document.getElementsByClassName("s2-well-text-block")[0].innerText.search("There are no available registration dates for the current test year. Please check back later to register for future tests.") != -1) {
-                        countdown(30, document.getElementsByClassName("s2-well-text-block")[0], "No registration date available")
-                    } else {
-                        notify("Registration date available.", true, true, true, true);
-                    }
-                }
-            } else if (GM_getValue("cbsatar-autoDate", false)) {
-                if (GM_getValue("cbsatar-subject", false)) {
-                    document.getElementById("testTypeSubjects").click();
-                    while (document.getElementsByClassName("regAdmin s2-tab-link").length == 0) {
-                        await new Promise(r => setTimeout(r, 500));
-                    }
-                    if (document.getElementById("testDateTab_" + GM_getValue("cbsatar-preferDate", ""))) {
-                        document.getElementById("testDateTab_" + GM_getValue("cbsatar-preferDate", "")).children[0].click();
-                        notify("Preferred date is available.", true, false, true, true);
-                        await new Promise(r => setTimeout(r, 500));
-                        let selectedSubjects = GM_getValue("cbsatar-subjectSelect", "").split(" ");
-                        selectedSubjects.forEach(id => {
-                            document.getElementById(id).click();
-                        });
-                        if (GM_getValue("cbsatar-date-feeWaiver", false)) {
-                            document.getElementById("feeWaiverYes").checked = true;
-                        } else {
-                            document.getElementById("feeWaiverNo").checked = true;
-                        }
-                        document.getElementById("continue").click();
-                    } else {
-                        countdown(15, document.getElementById("testDateAndAvailability"), "The preferred date is not available");
-                    }
-                } else {
-                    let foundDate = false;
-                    document.getElementsByName("selectedTestAdminYYYYMM").forEach((v) => {
-                        if (v.value == GM_getValue("cbsatar-preferDate", "")) {
-                            foundDate = true;
-                            v.checked = true;
-                        }
-                    });
-                    if (foundDate) {
-                        notify("Preferred date is available.", true, false, true, true);
-                        dateCheckOtherComponents();
-                        document.getElementById("continue").click();
-                    } else {
-                        countdown(15, document.getElementById("testRegistrationHeader"), "The preferred date is not available");
-                    }
-                }
-            }
-            break;
-        case "updateTestAndDateAction.action":
-        case "selectTestCenterAction.action":
-            if (document.getElementsByClassName("s2-h2")[1] != null) {
-                if (document.getElementsByClassName("s2-h2")[1].innerText == "Your Test Center") {
-                    if (!GM_getValue("cbsatar-prefer", true)) {
-                        if (document.getElementById("previousTestCenter") != null && document.getElementById("seatAvailable") != null) {
-                            if (document.getElementById("previousTestCenter").checked == true && document.getElementById("seatAvailable").innerText == "Seat Available") {
-                                if (GM_getValue("cbsatar-tcselect", false)) confirmCenter();
-                                else notify("This test center is available.", true, true, true, true);
-                            } else {
-                                notify("Your previous test center is not available.", false, true, true, false);
-                            }
-                        }
-                    } else {
-                        if (document.getElementById("newTestCenter") != null && document.getElementById("newSeatAvailable") != null) {
-                            if (document.getElementById("newTestCenter").checked == true && document.getElementById("newSeatAvailable").innerText == "Seat Available") {
-                                if (GM_getValue("cbsatar-tcselect", false)) confirmCenter();
-                                else notify("This test center is available.", true, true, true, true);
-                            } else {
-                                notify("This new test center is not available.", false, true, true, false);
-                            }
-                            break;
-                        } else if (GM_getValue("cbsatar-seats", false)) {
-                            if (GM_getValue("cbsatar-country", false)) {
-                                let countrySelect = document.getElementById("selectCountryName");
-                                log("Selected Country: " + countrySelect.options[countrySelect.selectedIndex].text);
-                                if (countrySelect.options[countrySelect.selectedIndex].text != GM_getValue("cbsatar-countryName", "None") && GM_getValue("cbsatar-countryName", "None") != "None") {
-                                    log("Preferred Country: " + GM_getValue("cbsatar-countryName", "None"));
-                                    selectItemByText(countrySelect, GM_getValue("cbsatar-countryName", "None"));
-                                    document.getElementById("searchByZipOrCountry").click();
-                                }
-                            }
-                            log("Finding seat...");
-                            let seatAvailable = false;
-                            if (document.getElementById("testCenterSearchResults_wrapper") != null) {
-                                log("Test Center Information:");
-                                while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
-                                    if (findTestCenter() == true) {
-                                        seatAvailable = true;
-                                        break;
-                                    }
-                                    document.getElementById("testCenterSearchResults_next").click();
-                                }
-                                if (findTestCenter() == true) {
-                                    seatAvailable = true;
-                                }
-                                if (!seatAvailable) {
-                                    if (document.getElementById("testCenterSearchResults_wrapper").innerText.search("My Ideal Test Center") == -1) {
-                                        try {
-                                            document.getElementById("sortLinks").remove();
-                                            document.getElementById("availabilityFilter").remove();
-                                        } catch (e) {
-                                            notify("Content error.", false, false, true, false);
-                                        }
-                                        countdown(15, document.getElementById("testCenterSearchResults_wrapper"), "No seat available in this region");
-                                    } else {
-                                        document.getElementById("testCenterSearchResults_first").click();
-                                        log("Select Ideal Test Center.");
-                                        log("Test Center Information:");
-                                        while ($("#testCenterSearchResults_next").hasClass("disabled") == false) {
-                                            for (let i = 1; i < document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr").length; i++) {
-                                                log("Code: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[2].getElementsByTagName("a")[0].getAttribute("data-code") + "; Name: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[0].innerText)
-                                            }
-                                            document.getElementById("testCenterSearchResults_next").click();
-                                        }
-                                        for (let i = 1; i < document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr").length; i++) {
-                                            log("Code: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[2].getElementsByTagName("a")[0].getAttribute("data-code") + "; Name: " + document.getElementById("testCenterSearchResults_wrapper").getElementsByTagName("tr")[i].getElementsByTagName("td")[0].innerText)
-                                        }
-                                    }
-                                } else {
-                                    if (GM_getValue("cbsatar-tcselect", false)) {
-                                        if (GM_getValue("cbsatar-enable-preferSelect", false)) {
-                                            selectCenterById(preferSelectId);
-                                        } else {
-                                            selectCenter();
-                                        }
-                                    }
-                                    else notify("Seat available.", true, true, true, true);
-                                }
-                            } else {
-                                if (document.getElementById("newCenterInfo") == null) {
-                                    if (window.location.href != "https://nsat.collegeboard.org/satweb/registration/updateTestAndDateAction.action" || !GM_getValue("cbsatar-country", false)) {
-                                        if (GM_getValue("cbsatar-country", false)) {
-                                            let countrySelect = document.getElementById("selectCountryName");
-                                            log("Selected Country: " + countrySelect.options[countrySelect.selectedIndex].text);
-                                            if (countrySelect.options[countrySelect.selectedIndex].text != GM_getValue("cbsatar-countryName", "None") && GM_getValue("cbsatar-countryName", "None") != "None") {
-                                                log("Preferred Country: " + GM_getValue("cbsatar-countryName", "None"));
-                                                selectItemByText(countrySelect, GM_getValue("cbsatar-countryName", "None"));
-                                                document.getElementById("searchByZipOrCountry").click();
-                                            }
-                                        } else {
-                                            notify("Please select another country and search again.", true, true, true, false);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else if (document.getElementById("s2-uploadPhotoButton") != null) {
-                    if (GM_getValue("cbsatar-photo", false)) {
-                        log("Skip photo upload.");
-                        document.getElementById("s2-continueButton").click();
-                    }
-                }
-            }
-            break;
-        case "commitPhotoSelectionAction.action":
-            if (GM_getValue("cbsatar-practice", false)) {
-                document.getElementById("continue").click();
-            }
-            break;
-        case "selectPractice.action":
-        case "completeRegistrationCCAction.action":
-            if (GM_getValue("cbsatar-pay", false)) {
-                document.getElementById("continue").click();
-                document.getElementById("confirmRegAgreeCheckbox").click();
-                document.getElementById("confirmConfirmInfoModalButton").click();
-            }
-            if (GM_getValue("cbsatar-held", false)) {
-                if (document.getElementById("seatHeldFor-warning") != null) {
-                    heldWarning();
-                    setInterval(function() {
-                        heldWarning();
-                    }, 60000);
-                }
-            }
-            break;
-        case "down.html":
-            if (GM_getValue("cbsatar-down", false)) {
-                countdown(30, document.getElementsByClassName("cb-alert-heading")[0].getElementsByTagName("p")[0], "Website down", "https://nsat.collegeboard.org/satweb/satHomeAction.action");
-            }
-            break;
-        case "":
-            if (url == "https://pps.collegeboard.org/") {
-                setTimeout(function() {
-                    if (document.getElementsByTagName("h2")[0] != null) {
-                        if (document.getElementsByTagName("h2")[0].innerText == "Session has timed out") {
-                            timeoutBack();
-                        }
-                        if (document.getElementsByTagName("h2")[0].innerText == "Make a Payment") {
-                            if (window.location.search.length == 0) {
-                                notify("You are set for payment page if you have the sound permission allowed.", false, true, false, false);
-                            } else {
-                                notify("The payment is invalid.", true, true, false, true);
-                                history.back(-1);
-                            }
-                        }
-                        if (document.getElementsByTagName("h2")[0].innerText == "Payment Method") {
-                            if (GM_getValue("cbsatar-pay", false)) {
-                                document.getElementById("paymentCreditCard").click();
-                                document.getElementsByName("submit")[0].click();
-                                setTimeout(function() {
-                                    document.getElementById("address1").value = GM_getValue("cbsatar-address1", "");
-                                    document.getElementById("address1").blur();
-                                    document.getElementById("cards").options.selectedIndex = GM_getValue("cbsatar-cardType", 3);
-                                    document.getElementById("cards").blur();
-                                    document.getElementById("creditCardNumber").value = GM_getValue("cbsatar-cardNum", "");
-                                    document.getElementById("creditCardNumber").blur();
-                                    document.getElementById("expireMonth").options.selectedIndex = GM_getValue("cbsatar-expireMonth", 0);
-                                    document.getElementById("expireMonth").blur();
-                                    selectItemByValue(document.getElementById("expireYear"), GM_getValue("cbsatar-expireYear", 0));
-                                    document.getElementById("expireYear").blur();
-                                    document.getElementById("securityCode").value = GM_getValue("cbsatar-securityCode", "");
-                                    document.getElementById("securityCode").blur();
-                                    setTimeout(function() {
-                                        document.getElementsByName("submit")[0].disabled = false;
-                                        confirmPay();
-                                    });
-                                }, 1000);
-                            }
-                        }
-                    }
-                }, 3000);
-            }
-            break;
+          }
+        }, 20000);
+
+         setTimeout(function() {
+          if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center") {
+              log("Set outside US test center.");
+              document.getElementsByName("tc-search-region")[1].checked = true;
+          }
+        }, 23000);
+
+        setTimeout(function() {
+          if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center") {
+              log("Step 1 : Testing Country or Region.");
+              //document.getElementsByName("tc-search-region")[1].checked = true;
+              document.getElementsByClassName("cb-font-weight-xs-regular")[1].click();
+             // document.getElementsByClassName("stepper-btn-forward")[0].click()
+          }
+        }, 25000);
+
+        setTimeout(function() {
+          if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center") {
+              log("Step 1 : Testing Country or Region.");
+             // document.getElementsByName("tc-search-region")[1].checked = true;
+              document.getElementsByClassName("stepper-btn-forward")[0].click()
+          }
+        }, 27000);
+
+log("before check availa");
+        checkAvailibility();
     }
 }
 
@@ -885,3 +683,4 @@ async function handleError(e) {
         handleError(e);
     }
 })();
+
