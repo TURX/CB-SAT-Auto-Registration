@@ -312,6 +312,43 @@ async function confirmPay() {
     }, 1000);
 }
 
+async function checkAvailibility()
+{
+    let seatAvailable = false;
+    await wait(30000);
+    while(!seatAvailable){
+           await wait(10000);
+               //document.getElementById("test-center-date-button-AUG-28").click();
+               log("Step 1.1 : Select Date");
+               document.getElementById("test-center-date-button-OCT-2").click();
+           await wait(2000);
+               log("Step 2 : Test Date continue.");
+               document.getElementById("testdate-continue-button").click();
+
+               log("Step 3 : Test Center Search.");
+               await wait(5000);
+               document.getElementById("test-center-search-option").click();
+               await wait(2000);
+               log("Step 4 : Test Center continue.");
+               document.getElementsByTagName("button")[7].click();
+               await wait(2000);
+                log("Step 5 : Test Center Select.");
+                for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
+                    if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
+                        document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
+                        document.getElementById("testcenter-continue-button").click(); //reserve first
+                        seatAvailable = true;
+                        break;
+                    }
+                }
+
+          log("Seat not available, wait for 5 seconds to continue searching...");
+    }
+    log("Step 6 : Notify.");
+    document.getElementById("continue-confirm-test-selection-btn").click(); //reserve for 20mins
+    callMe("Seat available.");
+}
+
 function startSettings() {
     if (confirm("Press OK to start settings, or press cancel to review settings.")) {
         alert("Use OK and Cancel buttons to select and the input field of the prompt window to type.");
@@ -602,142 +639,8 @@ async function main() {
           }
         }, 27000);
 
-       let seatAvailable = false;
-
-       setTimeout(function() {
-          //document.getElementById("test-center-date-button-AUG-28").click();
-          document.getElementById("test-center-date-button-OCT-2").click();
-        }, 29000);
-
-        setTimeout(function() {
-          log("Step 3 : Test Date.");
-          //document.getElementsByClassName("stepper-btn-forward")[2].click()
-          document.getElementById("testdate-continue-button").click();
-
-        }, 31000);
-
-        setTimeout(function() {
-
-            log("Step 4 : Test Center.");
-            document.getElementById("test-center-search-option").click();
-
-            /*   document.getElementsByTagName("option")[132].selected = true; //Macao
-                        document.getElementById("international-tc-search").value = "MO";
-                        document.getElementById("international-tc-search").options[132].selected = true;
-                        document.getElementsByTagName("span")[43].innerText = "Macao";
-                     */
-
-        }, 35000);
-
-        setTimeout(function() {
-            document.getElementsByTagName("button")[7].click();
-
-        }, 37000);
-
-        setTimeout(function() {
-
-            for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
-                if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
-                    document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
-                    document.getElementById("testcenter-continue-button").click(); //reserve first
-                    seatAvailable = true;
-                    break;
-                }else {
-                    //log("QIQI : " + i);
-                }
-
-            }
-
-        }, 40000);
-
-        setTimeout(function() {
-            log("QIQI NOTIFY");
-            if(seatAvailable){
-              document.getElementById("continue-confirm-test-selection-btn").click(); //reserve for 20mins
-              callMe("Seat available.");
-            }
-
-        }, 44000);
-
-
-        setTimeout(function() {
-        if(!seatAvailable) {
-            log("No seat available, retry");
-            location.reload();
-        }
-          }, 45000);
-/*
-         setTimeout(function() {
-
-
-          document.getElementById("test-center-date-button-OCT-2").click();
-
-                        log("Step 3 : Test Date.");
-                        //document.getElementsByClassName("stepper-btn-forward")[2].click()
-                        document.getElementById("testdate-continue-button").click();
-                        log("Step 4 : Test Center.");
-
-
-                    document.getElementsByTagName("button")[7].click();
-
-
-                        for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
-
-                            if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
-                                document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
-                                document.getElementById("testcenter-continue-button").click(); //reserve first
-                                seatAvailable = true;
-                                //await notify("Seat available.", true, false, true, true);
-                            }else {
-                               log("QIQI : " + i);
-                            }
-
-                        }
-
-
-
-
-        }, 33000);
-
-            if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center") {
-                let tryDate = ['test-center-date-button-AUG-28', 'test-center-date-button-OCT-2', 'test-center-date-button-DEC-4'];
-                for(let dateIndex = 0; dateIndex < 3; dateIndex++) {
-                    log("QIQI " + tryDate[dateIndex]);
-                    document.getElementById(tryDate[dateIndex]).click();
-                    if (dateIndex == 0) {
-                        log("Step 3 : Test Date.");
-                        //document.getElementsByClassName("stepper-btn-forward")[2].click()
-                        document.getElementById("testdate-continue-button").click();
-                        log("Step 4 : Test Center.");
-                        document.getElementById("test-center-search-option").click();
-                        document.getElementsByTagName("option")[132].selected = true; //Macao
-                        document.getElementById("international-tc-search").value = "MO";
-                        document.getElementById("international-tc-search").options[132].selected = true;
-                        document.getElementsByTagName("span")[43].innerText = "Macao";
-                        await new Promise(r => setTimeout(r, 3000));
-                    }
-
-                    document.getElementsByTagName("button")[7].click();
-                    await new Promise(r => setTimeout(r, 1000));
-                    if (document.getElementsByTagName("tr").length > 1) {
-                        for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
-
-                            if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
-                                document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
-                                document.getElementById("testcenter-continue-button").click(); //reserve first
-                                seatAvailable = true;
-                                //await notify("Seat available.", true, false, true, true);
-                            }else {
-                               log("QIQI " + dateIndex + ": " + i);
-                            }
-
-                        }
-
-                    }
-
-                }
-*/
-
+log("before check availa");
+        checkAvailibility();
     }
 }
 
@@ -780,3 +683,4 @@ async function handleError(e) {
         handleError(e);
     }
 })();
+
