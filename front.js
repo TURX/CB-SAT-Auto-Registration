@@ -316,37 +316,49 @@ async function checkAvailibility()
 {
     let seatAvailable = false;
     await wait(30000);
-    while(!seatAvailable){
-           await wait(10000);
-               //document.getElementById("test-center-date-button-AUG-28").click();
-               log("Step 1.1 : Select Date");
-               document.getElementById("test-center-date-button-OCT-2").click();
-           await wait(2000);
-               log("Step 2 : Test Date continue.");
-               document.getElementById("testdate-continue-button").click();
+    let sleepGap = 10000;
+    let refreshBudget = 60;
+    while(!seatAvailable && refreshBudget > 0 )
+    {
+        log("Step 1.1 : Select Date");
+        //document.getElementById("test-center-date-button-AUG-28").click();
+        //document.getElementById("test-center-date-button-OCT-2").click();
+        document.getElementById("test-center-date-button-DEC-4").click();
+        await wait(2000);
+        log("Step 2 : Test Date continue.");
+        document.getElementById("testdate-continue-button").click();
 
-               log("Step 3 : Test Center Search.");
-               await wait(5000);
-               document.getElementById("test-center-search-option").click();
-               await wait(2000);
-               log("Step 4 : Test Center continue.");
-               document.getElementsByTagName("button")[7].click();
-               await wait(2000);
-                log("Step 5 : Test Center Select.");
-                for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
-                    if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
-                        document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
-                        document.getElementById("testcenter-continue-button").click(); //reserve first
-                        seatAvailable = true;
-                        break;
-                    }
-                }
+        log("Step 3 : Test Center Search.");
+        await wait(5000);
+        document.getElementById("test-center-search-option").click();
+        await wait(2000);
+        log("Step 4 : Test Center continue.");
+        document.getElementsByTagName("button")[7].click();
+        await wait(2000);
+        log("Step 5 : Test Center Select.");
+        for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
+            if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
+                document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
+                document.getElementById("testcenter-continue-button").click(); //reserve first
+                seatAvailable = true;
+                break;
+            }
+        }
 
-          log("Seat not available, wait for 5 seconds to continue searching...");
+        log("Seat not available, wait few seconds to continue searching...");
+        refreshBudget = refreshBudget - 1;
+        await wait(sleepGap);
     }
-    log("Step 6 : Notify.");
-    document.getElementById("continue-confirm-test-selection-btn").click(); //reserve for 20mins
-    callMe("Seat available.");
+    if (seatAvailable)
+    {
+        log("Step 6 : Notify.");
+        document.getElementById("continue-confirm-test-selection-btn").click(); //reserve for 20mins
+        callMe("Seat available.");
+    }
+    else
+    {
+        location.reload();
+    }
 }
 
 function startSettings() {

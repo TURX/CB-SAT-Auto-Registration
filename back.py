@@ -20,6 +20,7 @@ versionNum = "40"
 account_sid = os.environ['TWILIO_ACCOUNT_SID']
 auth_token = os.environ['TWILIO_AUTH_TOKEN']
 source_phone_number = os.environ['SOURCE_PHONE_NUMBER']
+target_phone_number = os.environ['TARGET_PHONE_NUMBER']
 # Constants
 
 soundPlayCount = -1
@@ -100,7 +101,7 @@ class Request(BaseHTTPRequestHandler):
                 reason = query.get("reason")[0];
                 log("reason: " + query.get("reason")[0])
                 if (reason == "Seat available."):
-                    call("+447774863377")
+                    call(target_phone_number)
 
             if (query.get("count")):
                 log("count: " + query.get("count")[0])
