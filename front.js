@@ -312,58 +312,6 @@ async function confirmPay() {
     }, 1000);
 }
 
-async function checkAvailibility()
-{
-    let seatAvailable = false;
-    await wait(30000);
-    let sleepGap = 30000;
-    let refreshBudget = 20;
-    while(!seatAvailable && refreshBudget > 0 )
-    {
-        log("Step 3 : Select Date");
-        //document.getElementById("test-center-date-button-AUG-28").click();
-        //document.getElementById("test-center-date-button-OCT-2").click();
-        document.getElementById("test-center-date-button-DEC-4").click();
-        await wait(2000);
-        log("Step 4 : Test Date continue.");
-        document.getElementById("testdate-continue-button").click();
-
-        log("Step 5 : Test Center Search.");
-        await wait(3000);
-        document.getElementById("test-center-search-option").click();
-        await wait(2000);
-        log("Step 6 : Test Center continue.");
-        document.getElementsByTagName("button")[7].click();
-        await wait(2000);
-        log("Step 7 : Test Center Select.");
-        for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
-            if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
-                document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
-                document.getElementById("testcenter-continue-button").click(); //reserve first
-                seatAvailable = true;
-                break;
-            }
-        }
-
-        log("Seat not available, wait few seconds to continue searching...");
-        refreshBudget = refreshBudget - 1;
-        await wait(sleepGap);
-    }
-    if (seatAvailable)
-    {
-        log("Notifying! Seat Available!");
-        document.getElementById("continue-confirm-test-selection-btn").click(); //reserve for 20mins
-        callMe("Seat available.");
-    }
-    else
-    {
-        log("Restart registering");
-        document.getElementsByTagName("button")[5].click(); // Return to MySAT;
-        await wait(2000);
-        document.getElementsByTagName("button")[8].click(); // Return to MySAT;
-    }
-}
-
 function startSettings() {
     if (confirm("Press OK to start settings, or press cancel to review settings.")) {
         alert("Use OK and Cancel buttons to select and the input field of the prompt window to type.");
@@ -511,6 +459,60 @@ function dateCheckOtherComponents() {
     }
 }
 
+
+async function checkAvailibility()
+{
+    let seatAvailable = false;
+    await wait(5000);
+    let sleepGap = 30000;
+    let refreshBudget = 20;
+    while(!seatAvailable && refreshBudget > 0 )
+    {
+        log("Check Availability Step 1: Select Date");
+        //document.getElementById("test-center-date-button-AUG-28").click();
+        //document.getElementById("test-center-date-button-OCT-2").click();
+        document.getElementById("test-center-date-button-DEC-4").click();
+        await wait(2000);
+        log("Check Availability Step 2: Test Date continue.");
+        document.getElementById("testdate-continue-button").click();
+
+        log("Check Availability Step 3: Test Center Search.");
+        await wait(3000);
+        document.getElementById("test-center-search-option").click();
+        await wait(2000);
+        log("Check Availability Step 4: Test Center continue.");
+        document.getElementsByTagName("button")[7].click();
+        await wait(2000);
+        log("Check Availability Step 5: Test Center Select.");
+        for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
+            if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
+                document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
+                document.getElementById("testcenter-continue-button").click(); //reserve first
+                seatAvailable = true;
+                break;
+            }
+        }
+
+        log("Seat not available, wait few seconds to continue searching...");
+        refreshBudget = refreshBudget - 1;
+        await wait(sleepGap);
+    }
+
+    if (seatAvailable)
+    {
+        log("Notifying! Seat Available!");
+        document.getElementById("continue-confirm-test-selection-btn").click(); //reserve for 20mins
+        callMe("Seat available.");
+    }
+    else
+    {
+        log("Restart registering..");
+        document.getElementsByTagName("button")[5].click(); // Return to MySAT;
+        await wait(2000);
+        document.getElementsByTagName("button")[8].click(); // Return to MySAT;
+    }
+}
+
 async function main() {
     let error = false;
     log("Enabled, current URL: " + url);
@@ -524,11 +526,7 @@ async function main() {
 
     document.addEventListener("mousemove", terminatePlay);
     document.addEventListener("touchstart", terminatePlay);
-/*
-    if (!GM_getValue("cbsatar-agreeTerms", false)) {
-        error = true;
-    }
-*/
+
     if (!error && document.getElementsByTagName("h1").length != 0 && url != "https://nsat.collegeboard.org/satweb/registration/acceptSatTermsAndConditions.action") {
         if (document.getElementsByTagName("h1")[0].innerText == "Service Unavailable - Zero size object" || document.getElementsByTagName("h1")[0].innerText == "Access Denied") {
             error = true;
@@ -539,130 +537,101 @@ async function main() {
 
     if (!error) {
         try {
-            jQuery();
+            //jQuery();
         } catch (e) {
             log("jQuery failed to load: " + e);
             //notify("jQuery failed.", false, false, false, false);
             //location.reload();
         }
     }
+
+    // LOGIN
     if (url == "https://mysat.collegeboard.org/login")
     {
-        log("login page");
+        log("Login page");
         await wait(5000);
+        document.getElementById("password").click();
         document.getElementById("rememberMe").click();
         document.getElementsByTagName("button")[0].click();
     }
 
-    if (url == "https://mysat.collegeboard.org/dashboard") {
+    // HOME
+    if (url == "https://mysat.collegeboard.org/dashboard")
+    {
         log("Homepage.");
-        setTimeout(function() {
-            //wait the page fully loaded
-            log(path);
-            /*
-            let openSettingsLi1 = document.createElement("div");
-            let openSettingsA = document.createElement("a");
-            openSettingsA.innerText = "Auto Registration Settings";
-            openSettingsA.addEventListener("click", startSettings);
-            openSettingsLi1.appendChild(openSettingsA);
-            document.getElementById("global-header-navigation").appendChild(openSettingsLi1);
-            */
-            document.getElementById("qc-id-header-register-button").click();
-
-       // let openSettingsLi2 = openSettingsLi1.cloneNode(true);
-       // openSettingsLi2.children[0].addEventListener("click", startSettings);
-       // document.getElementsByClassName("cb-mobile-navigation")[0].children[1].children[0].children[0].appendChild(openSettingsLi2);
-        }, 6000);
-    }
-    else {
-        setTimeout(function() {
-            //handleError("idle detected");
-            // location.reload();
-        }, 60000);
+        //wait the page fully loaded
+        await wait(6000);
+        log(path);
+        document.getElementById("qc-id-header-register-button").click();
     }
 
 
-
+    // REGISTER
     if (!error && path == "register") {
+        await wait(6000);
+        if(document.getElementsByTagName("h1")[1].innerText == "Enter Your Information" &&
+            document.getElementsByClassName("cb-btn-yellow")[1].innerText == "Get Started")
+        {
+            log("Register step 1 - Get Started.");
+            document.getElementsByClassName("cb-btn-yellow")[1].click();
+        }
 
-         setTimeout(function() {
+        await wait(3000);
 
-             if(document.getElementsByTagName("h1")[1].innerText == "Enter Your Information" &&
-                document.getElementsByClassName("cb-btn-yellow")[1].innerText == "Get Started") {
-                  log("3"+path);
-                  document.getElementsByClassName("cb-btn-yellow")[1].click();
-             }
+        log("Register step 2 - Student Information");
+        if(document.getElementsByTagName("h3")[1].innerText =="Student Information")
+        {
+            document.getElementById("graddate-save-button").click();
+            document.getElementById("grade-save-button").click();
+            document.getElementsByClassName("cb-btn-yellow")[0].click(); // jump to test date/center tab directly
+        }
 
+        await wait(3000);
+        log("Register step 3 - You're On Your Way!");
+        if (document.getElementsByClassName("card-text")[1].innerText == "You’re On Your Way!")
+        {
+            document.getElementsByClassName("cb-btn-yellow")[1].click();
+        }
 
-        }, 10000);
+        await wait(5000);
+        if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center")
+        {
+            if (document.getElementsByTagName("h1")[2].innerText == "Terms and Conditions")
+            {
+                log("Register Step 4 - Terms and Conditions;");
+                log("Register Step 4.1 - Scroll the terms and conditions.");
+                var element = document.getElementById("terms-desc");
+                element.scrollTop = element.scrollHeight - element.clientHeight;
 
-        setTimeout(function() {
-             log("3"+path);
-            if(document.getElementsByTagName("h3")[1].innerText =="Student Information") {
-                document.getElementById("graddate-save-button").click();
-                document.getElementById("grade-save-button").click();
-                document.getElementsByClassName("cb-btn-yellow")[0].click(); // jump to test date/center tab directly
+                log("Register Step 4.2 - Check to agree the terms and go to the next step.");
+                await wait(2000);
+                document.getElementById("terms-acceptance-checkbox").click();
+                document.getElementById("forward-btn").click();
             }
 
-        }, 13000);
+            await wait(5000);
+            if (document.getElementsByTagName("h2")[1].innerText == "Test Details")
+            {
+                log("Register Step 5 - Select Date and Test Center;");
+                log("Register Step 5.1 - Set outside US test center.");
+                document.getElementsByName("tc-search-region")[1].checked = true;
 
-    }
+                await wait(2000);
+                log("Register Step 5.2 - Testing Country or Region.");
+                //document.getElementsByName("tc-search-region")[1].checked = true;
+                document.getElementsByClassName("cb-font-weight-xs-regular")[1].click();
+                // document.getElementsByClassName("stepper-btn-forward")[0].click()
 
-    if (!error && path == "register") {
-         setTimeout(function() {
-          if (document.getElementsByClassName("card-text")[1].innerText == "You’re On Your Way!") {
-              // await new Promise(r => setTimeout(r, 6000));
-               document.getElementsByClassName("cb-btn-yellow")[1].click();
-              log("4"+path);
+                await wait(2000);
+                log("Register Step 5.3 : Testing Country or Region.");
+                // document.getElementsByName("tc-search-region")[1].checked = true;
+                document.getElementsByClassName("stepper-btn-forward")[0].click();
 
-          }
-        }, 16000);
+                log("Register Step 6 - Checking availability");
+                checkAvailibility();
+            }
 
-        setTimeout(function() {
-          if (document.getElementsByTagName("h1")[2].innerText == "Terms and Conditions") {
-              // await new Promise(r => setTimeout(r, 6000));
-              var element = document.getElementById("terms-desc");
-              element.scrollTop = element.scrollHeight - element.clientHeight;
-              log("5"+path);
-          }
-        }, 18000);
-
-        setTimeout(function() {
-          if (document.getElementsByTagName("h1")[2].innerText == "Terms and Conditions") {
-              log("Check to agree the terms and go to the next step.");
-              document.getElementById("terms-acceptance-checkbox").click();
-              document.getElementById("forward-btn").click();
-              log("6"+path);
-
-          }
-        }, 20000);
-
-         setTimeout(function() {
-          if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center") {
-              log("Set outside US test center.");
-              document.getElementsByName("tc-search-region")[1].checked = true;
-          }
-        }, 23000);
-
-        setTimeout(function() {
-          if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center") {
-              log("Step 1 : Testing Country or Region.");
-              //document.getElementsByName("tc-search-region")[1].checked = true;
-              document.getElementsByClassName("cb-font-weight-xs-regular")[1].click();
-             // document.getElementsByClassName("stepper-btn-forward")[0].click()
-          }
-        }, 25000);
-
-        setTimeout(function() {
-          if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center") {
-              log("Step 2 : Testing Country or Region.");
-             // document.getElementsByName("tc-search-region")[1].checked = true;
-              document.getElementsByClassName("stepper-btn-forward")[0].click()
-          }
-        }, 27000);
-
-        log("Checking availability");
-        checkAvailibility();
+        }
     }
 }
 
