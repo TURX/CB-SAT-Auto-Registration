@@ -316,26 +316,26 @@ async function checkAvailibility()
 {
     let seatAvailable = false;
     await wait(30000);
-    let sleepGap = 10000;
-    let refreshBudget = 60;
+    let sleepGap = 30000;
+    let refreshBudget = 20;
     while(!seatAvailable && refreshBudget > 0 )
     {
-        log("Step 1.1 : Select Date");
+        log("Step 3 : Select Date");
         //document.getElementById("test-center-date-button-AUG-28").click();
         //document.getElementById("test-center-date-button-OCT-2").click();
         document.getElementById("test-center-date-button-DEC-4").click();
         await wait(2000);
-        log("Step 2 : Test Date continue.");
+        log("Step 4 : Test Date continue.");
         document.getElementById("testdate-continue-button").click();
 
-        log("Step 3 : Test Center Search.");
-        await wait(5000);
+        log("Step 5 : Test Center Search.");
+        await wait(3000);
         document.getElementById("test-center-search-option").click();
         await wait(2000);
-        log("Step 4 : Test Center continue.");
+        log("Step 6 : Test Center continue.");
         document.getElementsByTagName("button")[7].click();
         await wait(2000);
-        log("Step 5 : Test Center Select.");
+        log("Step 7 : Test Center Select.");
         for (let i = 1; i < document.getElementsByTagName("tr").length; i++) {
             if (document.getElementsByTagName("tr")[i].children[0].innerText.search("Seat is Available") != -1) {
                 document.getElementsByTagName("tr")[i].children[0].getElementsByTagName("button")[0].click();
@@ -351,13 +351,16 @@ async function checkAvailibility()
     }
     if (seatAvailable)
     {
-        log("Step 6 : Notify.");
+        log("Notifying! Seat Available!");
         document.getElementById("continue-confirm-test-selection-btn").click(); //reserve for 20mins
         callMe("Seat available.");
     }
     else
     {
-        location.reload();
+        log("Restart registering");
+        document.getElementsByTagName("button")[5].click(); // Return to MySAT;
+        await wait(2000);
+        document.getElementsByTagName("button")[8].click(); // Return to MySAT;
     }
 }
 
@@ -543,6 +546,13 @@ async function main() {
             //location.reload();
         }
     }
+    if (url == "https://mysat.collegeboard.org/login")
+    {
+        log("login page");
+        await wait(5000);
+        document.getElementById("rememberMe").click();
+        document.getElementsByTagName("button")[0].click();
+    }
 
     if (url == "https://mysat.collegeboard.org/dashboard") {
         log("Homepage.");
@@ -645,13 +655,13 @@ async function main() {
 
         setTimeout(function() {
           if (document.getElementsByTagName("h1")[1].innerText == "Select Date and Test Center") {
-              log("Step 1 : Testing Country or Region.");
+              log("Step 2 : Testing Country or Region.");
              // document.getElementsByName("tc-search-region")[1].checked = true;
               document.getElementsByClassName("stepper-btn-forward")[0].click()
           }
         }, 27000);
 
-log("before check availa");
+        log("Checking availability");
         checkAvailibility();
     }
 }
